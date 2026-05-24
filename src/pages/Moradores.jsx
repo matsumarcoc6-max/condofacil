@@ -24,7 +24,7 @@ export default function Moradores() {
   }
 
   async function cadastrarMorador() {
-    if (!nome || !email || !senha || !apartamento) {
+    if (!nome || !email || !senha) {
       setErro("Preencha todos os campos obrigatorios.");
       return;
     }
@@ -83,7 +83,7 @@ export default function Moradores() {
         <h3 style={{ color: "#f1f5f9", marginBottom: "12px" }}>Cadastrar usuario</h3>
 
         <input style={inp} placeholder="Nome completo" value={nome} onChange={(e) => setNome(e.target.value)} />
-        <input style={inp} placeholder="Apartamento (ex: 302)" value={apartamento} onChange={(e) => setApartamento(e.target.value)} />
+        <input style={inp} placeholder="Apartamento (ex: 302) — opcional para sindico e porteiro" value={apartamento} onChange={(e) => setApartamento(e.target.value)} />
         <input style={inp} type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
         <div style={{ position: "relative", marginBottom: "10px" }}>
           <input

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { collection, addDoc, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, orderBy, query, serverTimestamp, doc, deleteDoc } from "firebase/firestore";
 
 export default function Avisos() {
   const [avisos, setAvisos] = useState([]);
@@ -11,6 +11,11 @@ export default function Avisos() {
   useEffect(() => {
     carregarAvisos();
   }, []);
+
+  async function excluirAviso(id) {
+    await deleteDoc(doc(db, "avisos", id));
+    carregarAvisos();
+  }
 
   async function carregarAvisos() {
     const q = query(collection(db, "avisos"), orderBy("criado_em", "desc"));
@@ -34,13 +39,13 @@ export default function Avisos() {
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.titulo}>📢 Avisos</h2>
+      <h2 style={styles.titulo}>Avisos</h2>
 
       <div style={styles.card}>
         <h3 style={styles.subtitulo}>Novo aviso</h3>
         <input
           style={styles.input}
-          placeholder="Título"
+          placeholder="Titulo"
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
         />
@@ -64,13 +69,21 @@ export default function Avisos() {
           <div key={aviso.id} style={styles.avisoCard}>
             <h4 style={styles.avisoTitulo}>{aviso.titulo}</h4>
             <p style={styles.avisoMensagem}>{aviso.mensagem}</p>
-            <p style={styles.avisoData}>
-              {aviso.criado_em?.toDate().toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <p style={{ ...styles.avisoData, margin: 0 }}>
+                {aviso.criado_em?.toDate().toLocaleDateString("pt-BR", {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+              <button
+                onClick={() => excluirAviso(aviso.id)}
+                style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}
+              >
+                Excluir
+              </button>
+            </div>
           </div>
         ))}
       </div>
