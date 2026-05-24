@@ -254,7 +254,7 @@ const styles = {
   erro: { color: "#ef4444", marginBottom: "12px", fontSize: "0.9rem" },
   appContainer: {
     display: "flex",
-    minHeight: "100vh",
+   minHeight: "100vh",
     background: "#0f172a",
     fontFamily: "sans-serif",
   },
