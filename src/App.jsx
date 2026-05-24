@@ -24,6 +24,13 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
   const [perfil, setPerfil] = useState(null);
   const [pagina, setPagina] = useState("dashboard");
   const [menuAberto, setMenuAberto] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   async function recuperarSenha() {
     if (!emailRecuperacao) {
       setMensagemRecuperacao("Digite seu e-mail para recuperar a senha.");
@@ -161,9 +168,10 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
         />
       )}
       {/* Menu lateral */}
-      <div
-          className="sidebar-desktop"
-          style={styles.sidebar}>
+      <div style={{
+          ...styles.sidebar,
+          display: isMobile ? "none" : "flex",
+        }}>
         <div>
           <h2 style={styles.logo}>CondoFácil</h2>
           {condominio && (
