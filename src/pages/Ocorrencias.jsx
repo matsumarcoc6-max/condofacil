@@ -1,13 +1,6 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  orderBy,
-  query,
-  serverTimestamp,
-} from "firebase/firestore";
+import { collection, addDoc, getDocs, orderBy, query, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 
 export default function Ocorrencias() {
   const [ocorrencias, setOcorrencias] = useState([]);
@@ -48,6 +41,11 @@ export default function Ocorrencias() {
     media: "#f59e0b",
     baixa: "#22c55e",
   };
+  async function resolverOcorrencia(id) {
+    const ref = doc(db, "ocorrencias", id);
+    await updateDoc(ref, { status: "resolvida" });
+    carregarOcorrencias();
+  }
 
   const labelPrioridade = {
     alta: "Alta",
@@ -118,14 +116,26 @@ export default function Ocorrencias() {
             </div>
             <p style={styles.ocorrenciaDescricao}>{oc.descricao}</p>
             <div style={styles.ocorrenciaFooter}>
-              <span style={styles.status}>● {oc.status}</span>
-              <span style={styles.data}>
-                {oc.criado_em?.toDate().toLocaleDateString("pt-BR", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                })}
+              <span style={{ ...styles.status, color: oc.status === "resolvida" ? "#22c55e" : "#f59e0b" }}>
+                ● {oc.status}
               </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={styles.data}>
+                  {oc.criado_em?.toDate().toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
+                {oc.status === "aberta" && (
+                  <button
+                    onClick={() => resolverOcorrencia(oc.id)}
+                    style={{ padding: "4px 12px", background: "#22c55e", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem", fontWeight: "bold" }}
+                  >
+                    Resolver
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ))}
