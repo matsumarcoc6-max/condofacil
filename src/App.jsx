@@ -23,6 +23,7 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
   const [condominio, setCondominio] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [pagina, setPagina] = useState("dashboard");
+  const [menuAberto, setMenuAberto] = useState(false);
   async function recuperarSenha() {
     if (!emailRecuperacao) {
       setMensagemRecuperacao("Digite seu e-mail para recuperar a senha.");
@@ -150,9 +151,25 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
   ];
 
   return (
+    <div streturn (
     <div style={styles.appContainer}>
+      {/* Overlay para fechar menu no mobile */}
+      {menuAberto && (
+        <div
+          onClick={() => setMenuAberto(false)}
+          style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.5)", zIndex: 10 }}
+        />
+      )}
       {/* Menu lateral */}
-      <div style={styles.sidebar}>
+      <div style={{
+          ...styles.sidebar,
+          position: "fixed",
+          top: 0,
+          left: 0,
+          zIndex: 20,
+          transform: menuAberto ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.3s ease",
+        }}>
         <div>
           <h2 style={styles.logo}>CondoFácil</h2>
           {condominio && (
@@ -170,7 +187,7 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
         background: pagina === item.id ? "#38bdf8" : "transparent",
         color: pagina === item.id ? "#0f172a" : "#94a3b8",
       }}
-      onClick={() => setPagina(item.id)}
+      onClick={() => { setPagina(item.id); setMenuAberto(false); }}
     >
       {item.label}
     </button>
@@ -180,6 +197,14 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
           Sair
         </button>
       </div>
+
+      {/* Botão hamburguer */}
+      <button
+        onClick={() => setMenuAberto(!menuAberto)}
+        style={{ position: "fixed", top: "16px", left: "16px", zIndex: 30, background: "#1e293b", border: "none", borderRadius: "8px", padding: "8px 12px", cursor: "pointer", color: "#38bdf8", fontSize: "1.4rem" }}
+      >
+        ☰
+      </button>
 
       {/* Conteúdo principal */}
       <div style={styles.main}>
@@ -296,8 +321,10 @@ const styles = {
     width: "100%",
     fontSize: "0.9rem",
   },
-  main: {
+ main: {
     flex: 1,
     overflowY: "auto",
+    marginLeft: 0,
+    paddingTop: "60px",
   },
 };
