@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { auth, db } from "./firebase";
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
 import Avisos from "./pages/Avisos";
 import Ocorrencias from "./pages/Ocorrencias";
@@ -17,9 +17,24 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [erro, setErro] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [esqueceuSenha, setEsqueceuSenha] = useState(false);
+const [emailRecuperacao, setEmailRecuperacao] = useState("");
+const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
   const [condominio, setCondominio] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [pagina, setPagina] = useState("dashboard");
+  async function recuperarSenha() {
+    if (!emailRecuperacao) {
+      setMensagemRecuperacao("Digite seu e-mail para recuperar a senha.");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, emailRecuperacao);
+      setMensagemRecuperacao("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+    } catch (e) {
+      setMensagemRecuperacao("E-mail não encontrado. Verifique e tente novamente.");
+    }
+  }
   async function login() {
     try {
       const resultado = await signInWithEmailAndPassword(auth, email, password);
@@ -79,9 +94,44 @@ export default function App() {
             </span>
           </div>
           {erro && <p style={styles.erro}>{erro}</p>}
-          <button style={styles.botao} onClick={login}>
-            Entrar
-          </button>
+          
+          {!esqueceuSenha ? (
+            <>
+              <button style={styles.botao} onClick={login}>
+                Entrar
+              </button>
+              <p
+                onClick={() => { setEsqueceuSenha(true); setErro(""); }}
+                style={{ color: "#38bdf8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}
+              >
+                Esqueci minha senha
+              </p>
+            </>
+          ) : (
+            <>
+              <input
+                style={styles.input}
+                type="email"
+                placeholder="Digite seu e-mail"
+                value={emailRecuperacao}
+                onChange={(e) => setEmailRecuperacao(e.target.value)}
+              />
+              {mensagemRecuperacao && (
+                <p style={{ color: "#22c55e", fontSize: "0.85rem", marginBottom: "8px" }}>
+                  {mensagemRecuperacao}
+                </p>
+              )}
+              <button style={styles.botao} onClick={recuperarSenha}>
+                Enviar e-mail de recuperação
+              </button>
+              <p
+                onClick={() => { setEsqueceuSenha(false); setMensagemRecuperacao(""); }}
+                style={{ color: "#94a3b8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}
+              >
+                Voltar ao login
+              </p>
+            </>
+          )}
         </div>
       </div>
     );
