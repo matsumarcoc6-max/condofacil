@@ -7,6 +7,8 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  doc,
+  updateDoc,
 } from "firebase/firestore";
 
 export default function Reservas() {
@@ -38,6 +40,12 @@ export default function Reservas() {
     const q = query(collection(db, "reservas"), orderBy("criado_em", "desc"));
     const snap = await getDocs(q);
     setReservas(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+  }
+
+  async function cancelarReserva(id) {
+    const ref = doc(db, "reservas", id);
+    await updateDoc(ref, { status: "cancelada" });
+    carregarReservas();
   }
 
   async function realizarReserva() {
@@ -197,6 +205,14 @@ export default function Reservas() {
               </span>
               {r.observacao && (
                 <span style={styles.obs}>💬 {r.observacao}</span>
+              )}
+              {r.status !== "cancelada" && (
+                <button
+                  onClick={() => cancelarReserva(r.id)}
+                  style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}
+                >
+                  Cancelar
+                </button>
               )}
             </div>
           </div>
