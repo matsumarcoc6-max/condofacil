@@ -7,6 +7,8 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  doc,
+  deleteDoc,
 } from "firebase/firestore";
 
 export default function Financeiro() {
@@ -26,6 +28,11 @@ export default function Financeiro() {
     const q = query(collection(db, "financeiro"), orderBy("criado_em", "desc"));
     const snap = await getDocs(q);
     setLancamentos(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  }
+
+  async function excluirLancamento(id) {
+    await deleteDoc(doc(db, "financeiro", id));
+    carregarLancamentos();
   }
 
   async function adicionarLancamento() {
@@ -125,13 +132,19 @@ export default function Financeiro() {
             <p style={{ color: "#f1f5f9", margin: 0, fontWeight: "500" }}>{l.descricao}</p>
             <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: "0.85rem" }}>{l.categoria}</p>
           </div>
-          <div style={{ textAlign: "right" }}>
+        <div style={{ textAlign: "right" }}>
             <p style={{ color: l.tipo === "receita" ? "#22c55e" : "#ef4444", margin: 0, fontWeight: "bold" }}>
               {l.tipo === "receita" ? "+" : "-"}{formatarMoeda(l.valor)}
             </p>
             <p style={{ color: "#475569", margin: "4px 0 0", fontSize: "0.8rem" }}>
               {l.criado_em?.toDate().toLocaleDateString("pt-BR")}
             </p>
+            <button
+              onClick={() => excluirLancamento(l.id)}
+              style={{ marginTop: "6px", padding: "3px 10px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem" }}
+            >
+              Excluir
+            </button>
           </div>
         </div>
       ))}
