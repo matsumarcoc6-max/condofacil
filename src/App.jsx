@@ -161,15 +161,9 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
         />
       )}
       {/* Menu lateral */}
-      <div style={{
-          ...styles.sidebar,
-          position: window.innerWidth < 768 ? "fixed" : "relative",
-          top: 0,
-          left: 0,
-          zIndex: 20,
-          transform: window.innerWidth < 768 ? (menuAberto ? "translateX(0)" : "translateX(-100%)") : "translateX(0)",
-          transition: "transform 0.3s ease",
-        }}>
+      <div
+          className="sidebar-desktop"
+          style={styles.sidebar}>
         <div>
           <h2 style={styles.logo}>CondoFácil</h2>
           {condominio && (
@@ -198,13 +192,41 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
         </button>
       </div>
 
-      {/* Botão hamburguer */}
-      <button
-        onClick={() => setMenuAberto(!menuAberto)}
-        style={{ position: "fixed", top: "16px", left: "16px", zIndex: 30, background: "#1e293b", border: "none", borderRadius: "8px", padding: "8px 12px", cursor: "pointer", color: "#38bdf8", fontSize: "1.4rem" }}
-      >
-        ☰
-      </button>
+      {/* Menu mobile */}
+      <div className="menu-mobile" style={{ display: "none", position: "fixed", top: 0, left: 0, width: "100%", background: "#1e293b", zIndex: 30, alignItems: "center", padding: "12px 16px", boxSizing: "border-box" }}>
+        <button
+          onClick={() => setMenuAberto(!menuAberto)}
+          style={{ background: "transparent", border: "none", color: "#38bdf8", fontSize: "1.6rem", cursor: "pointer", marginRight: "16px" }}
+        >
+          ☰
+        </button>
+        <span style={{ color: "#38bdf8", fontWeight: "bold", fontSize: "1.1rem" }}>CondoFácil</span>
+      </div>
+
+      {/* Menu mobile aberto */}
+      {menuAberto && (
+        <div className="menu-mobile" style={{ display: "none", position: "fixed", top: "52px", left: 0, width: "75%", height: "100vh", background: "#1e293b", zIndex: 25, flexDirection: "column", padding: "16px", overflowY: "auto", boxSizing: "border-box" }}>
+          {menuItems
+            .filter((item) => !perfil || item.perfis.includes(perfil))
+            .map((item) => (
+              <button
+                key={item.id}
+                style={{ ...styles.menuItem, background: pagina === item.id ? "#38bdf8" : "transparent", color: pagina === item.id ? "#0f172a" : "#94a3b8" }}
+                onClick={() => { setPagina(item.id); setMenuAberto(false); }}
+              >
+                {item.label}
+              </button>
+            ))}
+        </div>
+      )}
+
+      {menuAberto && (
+        <div
+          className="menu-mobile"
+          style={{ display: "none", position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.5)", zIndex: 20 }}
+          onClick={() => setMenuAberto(false)}
+        />
+      )}
 
       {/* Conteúdo principal */}
       <div style={styles.main}>
