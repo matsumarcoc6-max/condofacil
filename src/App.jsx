@@ -163,11 +163,11 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
       {/* Menu lateral */}
       <div style={{
           ...styles.sidebar,
-          position: "fixed",
+          position: window.innerWidth < 768 ? "fixed" : "relative",
           top: 0,
           left: 0,
           zIndex: 20,
-          transform: menuAberto ? "translateX(0)" : "translateX(-100%)",
+          transform: window.innerWidth < 768 ? (menuAberto ? "translateX(0)" : "translateX(-100%)") : "translateX(0)",
           transition: "transform 0.3s ease",
         }}>
         <div>
