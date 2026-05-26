@@ -109,3 +109,23 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+/* Menu mobile responsivo */
+@media (max-width: 768px) {
+  /* Mostra o botão hamburger */
+  button[aria-label="Menu"] {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Menu lateral ocupa 75% da tela */
+  [style*="sidebar"] {
+    width: 75vw !important;
+    max-width: 280px !important;
+  }
+
+  /* Remove margem do conteúdo principal */
+  [style*="marginLeft: 280px"] {
+    margin-left: 0 !important;
+  }
+}
