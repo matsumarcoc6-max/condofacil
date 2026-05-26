@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
@@ -11,6 +11,7 @@ import Financeiro from "./pages/Financeiro";
 import Enquetes from "./pages/Enquetes";
 import Dashboard from "./pages/Dashboard";
 import Moradores from "./pages/Moradores";
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [email, setEmail] = useState("");
@@ -18,11 +19,21 @@ export default function App() {
   const [erro, setErro] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [esqueceuSenha, setEsqueceuSenha] = useState(false);
-const [emailRecuperacao, setEmailRecuperacao] = useState("");
-const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
+  const [emailRecuperacao, setEmailRecuperacao] = useState("");
+  const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
   const [condominio, setCondominio] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [pagina, setPagina] = useState("dashboard");
+  const [menuAberto, setMenuAberto] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const verificar = () => setIsMobile(window.innerWidth <= 768);
+    verificar();
+    window.addEventListener("resize", verificar);
+    return () => window.removeEventListener("resize", verificar);
+  }, []);
+
   async function recuperarSenha() {
     if (!emailRecuperacao) {
       setMensagemRecuperacao("Digite seu e-mail para recuperar a senha.");
@@ -35,6 +46,7 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
       setMensagemRecuperacao("E-mail não encontrado. Verifique e tente novamente.");
     }
   }
+
   async function login() {
     try {
       const resultado = await signInWithEmailAndPassword(auth, email, password);
@@ -51,7 +63,6 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
     if (!snap.empty) {
       setCondominio(snap.docs[0].data());
     }
-
     const { doc, getDoc } = await import("firebase/firestore");
     const perfilDoc = await getDoc(doc(db, "usuarios", uid));
     if (perfilDoc.exists()) {
@@ -94,40 +105,19 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
             </span>
           </div>
           {erro && <p style={styles.erro}>{erro}</p>}
-          
           {!esqueceuSenha ? (
             <>
-              <button style={styles.botao} onClick={login}>
-                Entrar
-              </button>
-              <p
-                onClick={() => { setEsqueceuSenha(true); setErro(""); }}
-                style={{ color: "#38bdf8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}
-              >
+              <button style={styles.botao} onClick={login}>Entrar</button>
+              <p onClick={() => { setEsqueceuSenha(true); setErro(""); }} style={{ color: "#38bdf8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}>
                 Esqueci minha senha
               </p>
             </>
           ) : (
             <>
-              <input
-                style={styles.input}
-                type="email"
-                placeholder="Digite seu e-mail"
-                value={emailRecuperacao}
-                onChange={(e) => setEmailRecuperacao(e.target.value)}
-              />
-              {mensagemRecuperacao && (
-                <p style={{ color: "#22c55e", fontSize: "0.85rem", marginBottom: "8px" }}>
-                  {mensagemRecuperacao}
-                </p>
-              )}
-              <button style={styles.botao} onClick={recuperarSenha}>
-                Enviar e-mail de recuperação
-              </button>
-              <p
-                onClick={() => { setEsqueceuSenha(false); setMensagemRecuperacao(""); }}
-                style={{ color: "#94a3b8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}
-              >
+              <input style={styles.input} type="email" placeholder="Digite seu e-mail" value={emailRecuperacao} onChange={(e) => setEmailRecuperacao(e.target.value)} />
+              {mensagemRecuperacao && <p style={{ color: "#22c55e", fontSize: "0.85rem", marginBottom: "8px" }}>{mensagemRecuperacao}</p>}
+              <button style={styles.botao} onClick={recuperarSenha}>Enviar e-mail de recuperação</button>
+              <p onClick={() => { setEsqueceuSenha(false); setMensagemRecuperacao(""); }} style={{ color: "#94a3b8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}>
                 Voltar ao login
               </p>
             </>
@@ -150,39 +140,81 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
   ];
 
   return (
-    <div style={styles.appContainer}>
-      {/* Menu lateral */}
-      <div style={styles.sidebar}>
+    <div style={{ display: "flex", minHeight: "100vh", background: "#0f172a", fontFamily: "sans-serif" }}>
+
+      {/* Botão hamburguer — só no mobile */}
+      {isMobile && (
+        <button
+          onClick={() => setMenuAberto(!menuAberto)}
+          style={{ position: "fixed", top: "12px", left: "12px", zIndex: 1001, background: "#1e293b", border: "none", color: "#38bdf8", fontSize: "24px", width: "44px", height: "44px", borderRadius: "8px", cursor: "pointer" }}
+        >
+          ☰
+        </button>
+      )}
+
+      {/* Overlay escuro quando menu mobile aberto */}
+      {isMobile && menuAberto && (
+        <div
+          onClick={() => setMenuAberto(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999 }}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div style={{
+        width: "240px",
+        minWidth: "240px",
+        background: "#1e293b",
+        padding: "24px 16px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        minHeight: "100vh",
+        position: isMobile ? "fixed" : "relative",
+        top: 0,
+        left: 0,
+        zIndex: 1000,
+        transform: isMobile ? (menuAberto ? "translateX(0)" : "translateX(-100%)") : "translateX(0)",
+        transition: "transform 0.3s ease",
+      }}>
         <div>
-          <h2 style={styles.logo}>CondoFácil</h2>
-          {condominio && (
-            <p style={styles.nomeCondominio}>{condominio.nome}</p>
-          )}
+          <h2 style={{ color: "#38bdf8", fontSize: "1.4rem", marginBottom: "4px" }}>CondoFácil</h2>
+          {condominio && <p style={{ color: "#64748b", fontSize: "0.8rem", marginTop: "4px" }}>{condominio.nome}</p>}
+          <nav style={{ marginTop: "32px" }}>
+            {menuItems
+              .filter((item) => !perfil || item.perfis.includes(perfil))
+              .map((item) => (
+                <button
+                  key={item.id}
+                  style={{
+                    display: "block", width: "100%", padding: "10px 16px", marginBottom: "4px",
+                    borderRadius: "8px", border: "none", textAlign: "left", cursor: "pointer",
+                    fontSize: "0.95rem", fontWeight: "500",
+                    background: pagina === item.id ? "#38bdf8" : "transparent",
+                    color: pagina === item.id ? "#0f172a" : "#94a3b8",
+                  }}
+                  onClick={() => { setPagina(item.id); setMenuAberto(false); }}
+                >
+                  {item.label}
+                </button>
+              ))}
+          </nav>
         </div>
-        <nav style={{ marginTop: "32px" }}>
-          {menuItems
-    .filter((item) => !perfil || item.perfis.includes(perfil))
-    .map((item) => (
-    <button
-      key={item.id}
-      style={{
-        ...styles.menuItem,
-        background: pagina === item.id ? "#38bdf8" : "transparent",
-        color: pagina === item.id ? "#0f172a" : "#94a3b8",
-      }}
-      onClick={() => setPagina(item.id)}
-    >
-      {item.label}
-    </button>
-  ))}
-        </nav>
-        <button style={styles.botaoSair} onClick={logout}>
+        <button
+          style={{ padding: "10px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "8px", cursor: "pointer", width: "100%", fontSize: "0.9rem" }}
+          onClick={logout}
+        >
           Sair
         </button>
       </div>
 
       {/* Conteúdo principal */}
-      <div style={styles.main}>
+      <div style={{
+        flex: 1,
+        overflowY: "auto",
+        padding: isMobile ? "64px 16px 16px" : "20px",
+        minWidth: 0,
+      }}>
         {pagina === "dashboard" && <Dashboard condominio={condominio} />}
         {pagina === "avisos" && <Avisos />}
         {pagina === "ocorrencias" && <Ocorrencias />}
@@ -193,17 +225,6 @@ const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
         {pagina === "enquetes" && <Enquetes />}
         {pagina === "moradores" && <Moradores />}
       </div>
-    </div>
-  );
-}
-
-function EmBreve({ modulo }) {
-  return (
-    <div style={{ padding: "24px" }}>
-      <h2 style={{ color: "#38bdf8" }}>{modulo}</h2>
-      <p style={{ color: "#64748b", marginTop: "12px" }}>
-        Módulo em desenvolvimento. Em breve disponível.
-      </p>
     </div>
   );
 }
@@ -252,52 +273,4 @@ const styles = {
     marginTop: "8px",
   },
   erro: { color: "#ef4444", marginBottom: "12px", fontSize: "0.9rem" },
-  appContainer: {
-    display: "flex",
-    minHeight: "100vh",
-    background: "#0f172a",
-    fontFamily: "sans-serif",
-  },
-  sidebar: {
-    width: "240px",
-    background: "#1e293b",
-    padding: "24px 16px",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    minHeight: "100vh",
-  },
-  logo: { color: "#38bdf8", fontSize: "1.4rem", marginBottom: "4px" },
-  nomeCondominio: {
-    color: "#64748b",
-    fontSize: "0.8rem",
-    marginTop: "4px",
-  },
-  menuItem: {
-    display: "block",
-    width: "100%",
-    padding: "10px 16px",
-    marginBottom: "4px",
-    borderRadius: "8px",
-    border: "none",
-    textAlign: "left",
-    cursor: "pointer",
-    fontSize: "0.95rem",
-    fontWeight: "500",
-    transition: "all 0.2s",
-  },
-  botaoSair: {
-    padding: "10px",
-    background: "transparent",
-    color: "#ef4444",
-    border: "1px solid #ef4444",
-    borderRadius: "8px",
-    cursor: "pointer",
-    width: "100%",
-    fontSize: "0.9rem",
-  },
-  main: {
-    flex: 1,
-    overflowY: "auto",
-  },
 };
