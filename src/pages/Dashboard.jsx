@@ -3,7 +3,7 @@ import { db } from "../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
 export default function Dashboard({ condominio }) {
-  const [stats, setStats] = useState({
+ const [stats, setStats] = useState({
     totalAvisos: 0,
     totalOcorrencias: 0,
     ocorrenciasAbertas: 0,
@@ -12,6 +12,7 @@ export default function Dashboard({ condominio }) {
     totalDocumentos: 0,
     totalReceitas: 0,
     totalDespesas: 0,
+    veiculosAlerta: [],
   });
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export default function Dashboard({ condominio }) {
   }, []);
 
   async function carregarStats() {
-    const [avisos, ocorrencias, ocorrenciasAbertas, reservas, visitantes, documentos, financeiro] =
+    const [avisos, ocorrencias, ocorrenciasAbertas, reservas, visitantes, documentos, financeiro, veiculosVisitantes] =
       await Promise.all([
         getDocs(collection(db, "avisos")),
         getDocs(collection(db, "ocorrencias")),
@@ -28,7 +29,36 @@ export default function Dashboard({ condominio }) {
         getDocs(query(collection(db, "visitantes"), where("status", "==", "presente"))),
         getDocs(collection(db, "documentos")),
         getDocs(collection(db, "financeiro")),
+        getDocs(query(collection(db, "visitantes"), where("status", "==", "presente"))),
       ]);
+
+    const agora = new Date();
+    const veiculosAlerta = veiculosVisitantes.docs
+      .filter((d) => {
+        const dados = d.data();
+        if (!dados.placa || !dados.entrada) return false;
+        const entrada = dados.entrada.toDate();
+        const horas = (agora - entrada) / (1000 * 60 * 60);
+        return horas >= 24;
+      })
+      .map((d) => d.data());
+
+    const lancamentos = financeiro.docs.map((d) => d.data());
+    const totalReceitas = lancamentos.filter((l) => l.tipo === "receita").reduce((acc, l) => acc + l.valor, 0);
+    const totalDespesas = lancamentos.filter((l) => l.tipo === "despesa").reduce((acc, l) => acc + l.valor, 0);
+
+    setStats({
+      totalAvisos: avisos.size,
+      totalOcorrencias: ocorrencias.size,
+      ocorrenciasAbertas: ocorrenciasAbertas.size,
+      totalReservas: reservas.size,
+      visitantesPresentes: visitantes.size,
+      totalDocumentos: documentos.size,
+      totalReceitas,
+      totalDespesas,
+      veiculosAlerta,
+    });
+  }
 
     const lancamentos = financeiro.docs.map((d) => d.data());
     const totalReceitas = lancamentos.filter((l) => l.tipo === "receita").reduce((acc, l) => acc + l.valor, 0);
@@ -105,6 +135,18 @@ export default function Dashboard({ condominio }) {
           </p>
         </div>
       )}
+      {stats.veiculosAlerta && stats.veiculosAlerta.length > 0 && (
+          <div style={{ background: "#f59e0b22", border: "1px solid #f59e0b", borderRadius: "12px", padding: "16px 20px", marginTop: "12px" }}>
+            <p style={{ color: "#f59e0b", margin: "0 0 8px", fontWeight: "bold" }}>
+              🚗 {stats.veiculosAlerta.length} veiculo{stats.veiculosAlerta.length !== 1 ? "s" : ""} de visitante ha mais de 24h — verificar
+            </p>
+            {stats.veiculosAlerta.map((v, i) => (
+              <p key={i} style={{ color: "#94a3b8", margin: "4px 0", fontSize: "0.85rem" }}>
+                Placa {v.placa} — Apto {v.apartamento} — {v.nome}
+              </p>
+            ))}
+          </div>
+        )}
     </div>
   );
 }
