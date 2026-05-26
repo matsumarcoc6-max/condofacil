@@ -23,7 +23,7 @@ enquetesAtivas: 0,
   }, []);
 
   async function carregarStats() {
-    const [avisos, ocorrencias, ocorrenciasAbertas, reservas, visitantes, documentos, financeiro, veiculosVisitantes, veiculos, pets, enquetesAtivas] =
+    const [avisos, ocorrencias, ocorrenciasAbertas, reservas, visitantes, documentos, financeiro, veiculos, pets, enquetesAtivas, veiculosVisitantes] =
       await Promise.all([
         getDocs(collection(db, "avisos")),
         getDocs(collection(db, "ocorrencias")),
@@ -33,8 +33,8 @@ enquetesAtivas: 0,
         getDocs(collection(db, "documentos")),
         getDocs(collection(db, "financeiro")),
         getDocs(collection(db, "veiculos")),
-getDocs(collection(db, "pets")),
-getDocs(query(collection(db, "enquetes"), where("ativa", "==", true))),
+        getDocs(collection(db, "pets")),
+        getDocs(query(collection(db, "enquetes"), where("ativa", "==", true))),
         getDocs(query(collection(db, "visitantes"), where("status", "==", "presente"))),
       ]);
 
@@ -61,8 +61,8 @@ getDocs(query(collection(db, "enquetes"), where("ativa", "==", true))),
       visitantesPresentes: visitantes.size,
       totalDocumentos: documentos.size,
       totalVeiculos: veiculos.size,
-totalPets: pets.size,
-enquetesAtivas: enquetesAtivas.size,
+      totalPets: pets.size,
+      enquetesAtivas: enquetesAtivas.size,
       totalReceitas,
       totalDespesas,
       veiculosAlerta,
