@@ -12,6 +12,7 @@ import Enquetes from "./pages/Enquetes";
 import Dashboard from "./pages/Dashboard";
 import Moradores from "./pages/Moradores";
 import Veiculos from "./pages/Veiculos";
+import Pets from "./pages/Pets";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -139,6 +140,7 @@ export default function App() {
     { id: "enquetes", label: "📊 Enquetes", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "moradores", label: "🏘️ Moradores", perfis: ["admin_geral", "sindico"] },
     { id: "veiculos", label: "🚗 Veiculos", perfis: ["admin_geral", "sindico", "porteiro"] },
+    { id: "pets", label: "🐾 Animais", perfis: ["admin_geral", "sindico", "morador"] },
   ];
 
   return (
@@ -227,6 +229,7 @@ export default function App() {
         {pagina === "enquetes" && <Enquetes />}
         {pagina === "moradores" && <Moradores />}
         {pagina === "veiculos" && <Veiculos />}
+        {pagina === "pets" && <Pets />}
       </div>
     </div>
   );
