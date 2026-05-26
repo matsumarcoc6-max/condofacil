@@ -10,6 +10,9 @@ export default function Dashboard({ condominio }) {
     totalReservas: 0,
     visitantesPresentes: 0,
     totalDocumentos: 0,
+    totalVeiculos: 0,
+totalPets: 0,
+enquetesAtivas: 0,
     totalReceitas: 0,
     totalDespesas: 0,
     veiculosAlerta: [],
@@ -20,7 +23,7 @@ export default function Dashboard({ condominio }) {
   }, []);
 
   async function carregarStats() {
-    const [avisos, ocorrencias, ocorrenciasAbertas, reservas, visitantes, documentos, financeiro, veiculosVisitantes] =
+    const [avisos, ocorrencias, ocorrenciasAbertas, reservas, visitantes, documentos, financeiro, veiculosVisitantes, veiculos, pets, enquetesAtivas] =
       await Promise.all([
         getDocs(collection(db, "avisos")),
         getDocs(collection(db, "ocorrencias")),
@@ -29,6 +32,9 @@ export default function Dashboard({ condominio }) {
         getDocs(query(collection(db, "visitantes"), where("status", "==", "presente"))),
         getDocs(collection(db, "documentos")),
         getDocs(collection(db, "financeiro")),
+        getDocs(collection(db, "veiculos")),
+getDocs(collection(db, "pets")),
+getDocs(query(collection(db, "enquetes"), where("ativa", "==", true))),
         getDocs(query(collection(db, "visitantes"), where("status", "==", "presente"))),
       ]);
 
@@ -54,6 +60,9 @@ export default function Dashboard({ condominio }) {
       totalReservas: reservas.size,
       visitantesPresentes: visitantes.size,
       totalDocumentos: documentos.size,
+      totalVeiculos: veiculos.size,
+totalPets: pets.size,
+enquetesAtivas: enquetesAtivas.size,
       totalReceitas,
       totalDespesas,
       veiculosAlerta,
@@ -88,6 +97,9 @@ export default function Dashboard({ condominio }) {
     { label: "Reservas realizadas", valor: stats.totalReservas, cor: "#a78bfa", icone: "📅" },
     { label: "Visitantes presentes", valor: stats.visitantesPresentes, cor: "#22c55e", icone: "👥" },
     { label: "Documentos", valor: stats.totalDocumentos, cor: "#f59e0b", icone: "📄" },
+    { label: "Veiculos cadastrados", valor: stats.totalVeiculos, cor: "#38bdf8", icone: "🚗" },
+{ label: "Animais cadastrados", valor: stats.totalPets, cor: "#a78bfa", icone: "🐾" },
+{ label: "Enquetes ativas", valor: stats.enquetesAtivas, cor: "#22c55e", icone: "📊" },
   ];
 
   return (
