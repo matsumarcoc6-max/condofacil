@@ -70,7 +70,7 @@ export default function Dashboard({ condominio }) {
       )}
 
       {/* Cards de metricas */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "16px", marginBottom: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "16px", marginBottom: "24px" }}>
         {cards.map((card) => (
           <div key={card.label} style={{ background: "#1e293b", padding: "20px", borderRadius: "12px", borderTop: "3px solid " + card.cor }}>
             <p style={{ fontSize: "1.8rem", margin: 0 }}>{card.icone}</p>
@@ -82,7 +82,7 @@ export default function Dashboard({ condominio }) {
 
       {/* Resumo financeiro */}
       <h3 style={{ color: "#f1f5f9", marginBottom: "12px" }}>Resumo financeiro</h3>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "24px" }}>
+      <div style={{ display: "grid",gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "16px", marginBottom: "24px" }}>
         <div style={{ background: "#1e293b", padding: "20px", borderRadius: "12px", borderTop: "3px solid #22c55e" }}>
           <p style={{ color: "#64748b", fontSize: "0.85rem", margin: 0 }}>Receitas</p>
           <h3 style={{ color: "#22c55e", margin: "8px 0 0", fontSize: "1.3rem" }}>{formatarMoeda(stats.totalReceitas)}</h3>
