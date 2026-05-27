@@ -14,6 +14,7 @@ import Moradores from "./pages/Moradores";
 import Veiculos from "./pages/Veiculos";
 import Pets from "./pages/Pets";
 import AgendaVisitas from "./pages/AgendaVisitas";
+import AchadosPerdidos from "./pages/AchadosPerdidos";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -143,6 +144,7 @@ export default function App() {
     { id: "moradores", label: "🏘️ Moradores", perfis: ["admin_geral", "sindico"] },
     { id: "veiculos", label: "🚗 Veiculos", perfis: ["admin_geral", "sindico", "porteiro"] },
     { id: "pets", label: "🐾 Animais", perfis: ["admin_geral", "sindico", "morador"] },
+    { id: "achados", label: "🔍 Achados e Perdidos", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
   ];
 
   return (
@@ -233,7 +235,7 @@ export default function App() {
         {pagina === "veiculos" && <Veiculos />}
         {pagina === "pets" && <Pets />}
 {pagina === "agenda" && <AgendaVisitas />}
-        {pagina === "pets" && <Pets />}
+{pagina === "achados" && <AchadosPerdidos />}
       </div>
     </div>
   );
