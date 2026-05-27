@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { db, storage } from "../firebase";
-import { collection, addDoc, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, orderBy, query, serverTimestamp, doc, updateDoc, arrayUnion } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
-export default function Documentos() {
+export default function Documentos({ usuarioNome }) {
   const [documentos, setDocumentos] = useState([]);
   const [titulo, setTitulo] = useState("");
   const [categoria, setCategoria] = useState("Ata de Reuniao");
@@ -22,7 +22,16 @@ export default function Documentos() {
     const snap = await getDocs(q);
     setDocumentos(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   }
-
+async function confirmarLeitura(id, nomeUsuario) {
+    const ref = doc(db, "documentos", id);
+    await updateDoc(ref, {
+      leituras: arrayUnion({
+        nome: nomeUsuario,
+        data: new Date().toLocaleString("pt-BR"),
+      }),
+    });
+    carregarDocumentos();
+  }
   async function publicarDocumento() {
     if (!titulo || !arquivo) {
       setErro("Titulo e arquivo sao obrigatorios.");
@@ -133,9 +142,29 @@ export default function Documentos() {
               <span style={{ color: "#475569", fontSize: "0.85rem" }}>
                 {d.criado_em?.toDate().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
               </span>
-              <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ color: "#38bdf8", fontSize: "0.85rem", fontWeight: "bold", textDecoration: "none" }}>
-                Ver documento
-              </a>
+              {d.leituras && d.leituras.length > 0 && (
+                <div style={{ marginBottom: "8px" }}>
+                  <p style={{ color: "#64748b", fontSize: "0.8rem", margin: "0 0 4px" }}>
+                    ✓ {d.leituras.length} confirmacao{d.leituras.length !== 1 ? "es" : ""} de leitura:
+                  </p>
+                  {d.leituras.map((l, i) => (
+                    <p key={i} style={{ color: "#475569", fontSize: "0.75rem", margin: "2px 0" }}>
+                      {l.nome} — {l.data}
+                    </p>
+                  ))}
+                </div>
+              )}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ color: "#38bdf8", fontSize: "0.85rem", fontWeight: "bold", textDecoration: "none" }}>
+                  Ver documento
+                </a>
+                <button
+                  onClick={() => confirmarLeitura(d.id, usuarioNome || "Usuario")}
+                  style={{ padding: "4px 12px", background: "#22c55e", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem", fontWeight: "bold" }}
+                >
+                  ✓ Confirmar leitura
+                </button>
+              </div>
             </div>
           </div>
         ))}

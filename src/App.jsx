@@ -226,7 +226,7 @@ export default function App() {
         {pagina === "ocorrencias" && <Ocorrencias />}
         {pagina === "reservas" && <Reservas />}
         {pagina === "visitantes" && <Visitantes />}
-        {pagina === "documentos" && <Documentos />}
+        {pagina === "documentos" && <Documentos usuarioNome={condominio ? user?.email : "Usuario"} />}
         {pagina === "financeiro" && <Financeiro />}
         {pagina === "enquetes" && <Enquetes />}
         {pagina === "moradores" && <Moradores />}
