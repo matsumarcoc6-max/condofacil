@@ -3,7 +3,7 @@ import { db } from "../firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
 export default function Dashboard({ condominio }) {
- const [stats, setStats] = useState({
+  const [stats, setStats] = useState({
     totalAvisos: 0,
     totalOcorrencias: 0,
     ocorrenciasAbertas: 0,
@@ -11,8 +11,8 @@ export default function Dashboard({ condominio }) {
     visitantesPresentes: 0,
     totalDocumentos: 0,
     totalVeiculos: 0,
-totalPets: 0,
-enquetesAtivas: 0,
+    totalPets: 0,
+    enquetesAtivas: 0,
     totalReceitas: 0,
     totalDespesas: 0,
     veiculosAlerta: [],
@@ -69,22 +69,6 @@ enquetesAtivas: 0,
     });
   }
 
-    const lancamentos = financeiro.docs.map((d) => d.data());
-    const totalReceitas = lancamentos.filter((l) => l.tipo === "receita").reduce((acc, l) => acc + l.valor, 0);
-    const totalDespesas = lancamentos.filter((l) => l.tipo === "despesa").reduce((acc, l) => acc + l.valor, 0);
-
-    setStats({
-      totalAvisos: avisos.size,
-      totalOcorrencias: ocorrencias.size,
-      ocorrenciasAbertas: ocorrenciasAbertas.size,
-      totalReservas: reservas.size,
-      visitantesPresentes: visitantes.size,
-      totalDocumentos: documentos.size,
-      totalReceitas,
-      totalDespesas,
-    });
-  }
-
   function formatarMoeda(valor) {
     return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   }
@@ -98,8 +82,8 @@ enquetesAtivas: 0,
     { label: "Visitantes presentes", valor: stats.visitantesPresentes, cor: "#22c55e", icone: "👥" },
     { label: "Documentos", valor: stats.totalDocumentos, cor: "#f59e0b", icone: "📄" },
     { label: "Veiculos cadastrados", valor: stats.totalVeiculos, cor: "#38bdf8", icone: "🚗" },
-{ label: "Animais cadastrados", valor: stats.totalPets, cor: "#a78bfa", icone: "🐾" },
-{ label: "Enquetes ativas", valor: stats.enquetesAtivas, cor: "#22c55e", icone: "📊" },
+    { label: "Animais cadastrados", valor: stats.totalPets, cor: "#a78bfa", icone: "🐾" },
+    { label: "Enquetes ativas", valor: stats.enquetesAtivas, cor: "#22c55e", icone: "📊" },
   ];
 
   return (
@@ -111,7 +95,6 @@ enquetesAtivas: 0,
         </p>
       )}
 
-      {/* Cards de metricas */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "16px", marginBottom: "24px" }}>
         {cards.map((card) => (
           <div key={card.label} style={{ background: "#1e293b", padding: "20px", borderRadius: "12px", borderTop: "3px solid " + card.cor }}>
@@ -122,9 +105,8 @@ enquetesAtivas: 0,
         ))}
       </div>
 
-      {/* Resumo financeiro */}
       <h3 style={{ color: "#f1f5f9", marginBottom: "12px" }}>Resumo financeiro</h3>
-      <div style={{ display: "grid",gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "16px", marginBottom: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "16px", marginBottom: "24px" }}>
         <div style={{ background: "#1e293b", padding: "20px", borderRadius: "12px", borderTop: "3px solid #22c55e" }}>
           <p style={{ color: "#64748b", fontSize: "0.85rem", margin: 0 }}>Receitas</p>
           <h3 style={{ color: "#22c55e", margin: "8px 0 0", fontSize: "1.3rem" }}>{formatarMoeda(stats.totalReceitas)}</h3>
@@ -139,7 +121,6 @@ enquetesAtivas: 0,
         </div>
       </div>
 
-      {/* Alertas */}
       {stats.ocorrenciasAbertas > 0 && (
         <div style={{ background: "#ef444422", border: "1px solid #ef4444", borderRadius: "12px", padding: "16px 20px" }}>
           <p style={{ color: "#ef4444", margin: 0, fontWeight: "bold" }}>
@@ -147,18 +128,19 @@ enquetesAtivas: 0,
           </p>
         </div>
       )}
+
       {stats.veiculosAlerta && stats.veiculosAlerta.length > 0 && (
-          <div style={{ background: "#f59e0b22", border: "1px solid #f59e0b", borderRadius: "12px", padding: "16px 20px", marginTop: "12px" }}>
-            <p style={{ color: "#f59e0b", margin: "0 0 8px", fontWeight: "bold" }}>
-              🚗 {stats.veiculosAlerta.length} veiculo{stats.veiculosAlerta.length !== 1 ? "s" : ""} de visitante ha mais de 24h — verificar
+        <div style={{ background: "#f59e0b22", border: "1px solid #f59e0b", borderRadius: "12px", padding: "16px 20px", marginTop: "12px" }}>
+          <p style={{ color: "#f59e0b", margin: "0 0 8px", fontWeight: "bold" }}>
+            🚗 {stats.veiculosAlerta.length} veiculo{stats.veiculosAlerta.length !== 1 ? "s" : ""} de visitante ha mais de 24h — verificar
+          </p>
+          {stats.veiculosAlerta.map((v, i) => (
+            <p key={i} style={{ color: "#94a3b8", margin: "4px 0", fontSize: "0.85rem" }}>
+              Placa {v.placa} — Apto {v.apartamento} — {v.nome}
             </p>
-            {stats.veiculosAlerta.map((v, i) => (
-              <p key={i} style={{ color: "#94a3b8", margin: "4px 0", fontSize: "0.85rem" }}>
-                Placa {v.placa} — Apto {v.apartamento} — {v.nome}
-              </p>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
+      )}
     </div>
   );
 }
