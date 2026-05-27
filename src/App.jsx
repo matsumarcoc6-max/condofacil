@@ -14,7 +14,6 @@ import Moradores from "./pages/Moradores";
 import Veiculos from "./pages/Veiculos";
 import Pets from "./pages/Pets";
 import AgendaVisitas from "./pages/AgendaVisitas";
-import Pets from "./pages/Pets";
 
 export default function App() {
   const [user, setUser] = useState(null);
