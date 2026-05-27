@@ -130,19 +130,18 @@ export default function App() {
     );
   }
 
-  const menuItems = [
+ const menuItems = [
     { id: "dashboard", label: "🏠 Dashboard", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
     { id: "avisos", label: "📢 Avisos", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
     { id: "ocorrencias", label: "🚨 Ocorrencias", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "reservas", label: "📅 Reservas", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "visitantes", label: "👥 Visitantes", perfis: ["admin_geral", "sindico", "porteiro"] },
+    { id: "agenda", label: "📋 Agenda Visitas", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
     { id: "documentos", label: "📄 Documentos", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "financeiro", label: "💰 Financeiro", perfis: ["admin_geral", "sindico"] },
     { id: "enquetes", label: "📊 Enquetes", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "moradores", label: "🏘️ Moradores", perfis: ["admin_geral", "sindico"] },
     { id: "veiculos", label: "🚗 Veiculos", perfis: ["admin_geral", "sindico", "porteiro"] },
-    { id: "pets", label: "🐾 Animais", perfis: ["admin_geral", "sindico", "morador"] },
-{ id: "agenda", label: "📋 Agenda Visitas", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
     { id: "pets", label: "🐾 Animais", perfis: ["admin_geral", "sindico", "morador"] },
   ];
 
