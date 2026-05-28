@@ -1,246 +1,152 @@
-import React, { useState, useEffect } from "react";
-import { collection, addDoc, getDocs, query, where, Timestamp } from "firebase/firestore";
+import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { useAuth } from "../contexts/AuthContext";
+import { collection, addDoc, getDocs, orderBy, query, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 
 export default function Reservas() {
-  const { userProfile } = useAuth();
   const [reservas, setReservas] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [area, setArea] = useState("salao_festas");
+  const [unidade, setUnidade] = useState("1");
+  const [apartamento, setApartamento] = useState("");
+  const [responsavel, setResponsavel] = useState("");
+  const [data, setData] = useState("");
+  const [horarioInicio, setHorarioInicio] = useState("");
+  const [horarioFim, setHorarioFim] = useState("");
+  const [observacao, setObservacao] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
 
-  // Configuração das áreas
   const areasConfig = {
     salao_festas: { nome: "Salão de Festas", unidades: 1 },
     churrasqueira: { nome: "Churrasqueira", unidades: 3 },
     quadra: { nome: "Quadra Esportiva", unidades: 1 },
     espaco_gourmet: { nome: "Espaço Gourmet", unidades: 1 },
-    academia: { nome: "Academia", unidades: 1 }
+    academia: { nome: "Academia", unidades: 1 },
+    piscina: { nome: "Piscina", unidades: 1 },
   };
 
-  const [formData, setFormData] = useState({
-    area: "",
-    unidade: "1",
-    data: "",
-    horarioInicio: "",
-    horarioFim: "",
-    observacoes: ""
-  });
+  useEffect(() => { carregarReservas(); }, []);
 
-  const handleAreaChange = (e) => {
-    const area = e.target.value;
-    setFormData({ ...formData, area, unidade: "1" });
-  };
+  async function carregarReservas() {
+    const q = query(collection(db, "reservas"), orderBy("criado_em", "desc"));
+    const snap = await getDocs(q);
+    setReservas(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  function getNomeArea() {
+    const config = areasConfig[area];
+    if (!config) return area;
+    if (area === "churrasqueira") return `Churrasqueira ${unidade.padStart(2, "0")}`;
+    return config.nome;
+  }
 
-    try {
-      // Validação de disponibilidade
-      const areaCompleta = formData.area === "churrasqueira" 
-        ? `${formData.area}_${formData.unidade}` 
-        : formData.area;
-
-      const dataReserva = new Date(formData.data + "T00:00:00");
-      const inicioReserva = Timestamp.fromDate(dataReserva);
-      const fimReserva = Timestamp.fromDate(new Date(dataReserva.getTime() + 86400000));
-
-      const q = query(
-        collection(db, "reservas"),
-        where("area", "==", areaCompleta),
-        where("data", ">=", inicioReserva),
-        where("data", "<", fimReserva)
-      );
-
-      const snapshot = await getDocs(q);
-
-      if (!snapshot.empty) {
-        alert("Esta área/unidade já está reservada para a data selecionada!");
-        setLoading(false);
-        return;
-      }
-
-      // Criar reserva
-      await addDoc(collection(db, "reservas"), {
-        area: areaCompleta,
-        areaNome: areasConfig[formData.area].nome + (formData.area === "churrasqueira" ? ` ${formData.unidade}` : ""),
-        data: inicioReserva,
-        horarioInicio: formData.horarioInicio,
-        horarioFim: formData.horarioFim,
-        observacoes: formData.observacoes,
-        morador: userProfile.nome || "Não informado",
-        apartamento: userProfile.apartamento || "Não informado",
-        status: "confirmada",
-        criadoEm: Timestamp.now()
-      });
-
-      alert("Reserva realizada com sucesso!");
-      setFormData({
-        area: "",
-        unidade: "1",
-        data: "",
-        horarioInicio: "",
-        horarioFim: "",
-        observacoes: ""
-      });
-      carregarReservas();
-    } catch (error) {
-      console.error("Erro ao criar reserva:", error);
-      alert("Erro ao criar reserva: " + error.message);
-    } finally {
-      setLoading(false);
+  async function realizarReserva() {
+    if (!apartamento || !responsavel || !data || !horarioInicio || !horarioFim) {
+      setErro("Preencha todos os campos obrigatorios.");
+      return;
     }
-  };
-
-  const carregarReservas = async () => {
-    try {
-      const snapshot = await getDocs(collection(db, "reservas"));
-      const lista = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setReservas(lista.sort((a, b) => b.data.seconds - a.data.seconds));
-    } catch (error) {
-      console.error("Erro ao carregar reservas:", error);
+    const nomeArea = getNomeArea();
+    const conflito = reservas.find(
+      (r) => r.area === nomeArea && r.data === data && r.status !== "cancelada" &&
+        !(horarioFim <= r.horarioInicio || horarioInicio >= r.horarioFim)
+    );
+    if (conflito) {
+      setErro(`Conflito de horario com reserva existente (${conflito.horarioInicio} - ${conflito.horarioFim}).`);
+      return;
     }
-  };
-
-  useEffect(() => {
+    setErro("");
+    setSalvando(true);
+    await addDoc(collection(db, "reservas"), {
+      area: nomeArea,
+      apartamento,
+      responsavel,
+      data,
+      horarioInicio,
+      horarioFim,
+      observacao,
+      status: "confirmada",
+      criado_em: serverTimestamp(),
+    });
+    setApartamento(""); setResponsavel(""); setData("");
+    setHorarioInicio(""); setHorarioFim(""); setObservacao("");
+    setSalvando(false);
     carregarReservas();
-  }, []);
+  }
+
+  async function cancelarReserva(id) {
+    await updateDoc(doc(db, "reservas", id), { status: "cancelada" });
+    carregarReservas();
+  }
+
+  const corStatus = { confirmada: "#22c55e", pendente: "#f59e0b", cancelada: "#ef4444" };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Reservas de Áreas Comuns</h1>
+    <div style={{ padding: "24px" }}>
+      <h2 style={{ color: "#38bdf8", marginBottom: "20px" }}>Reservas</h2>
 
-      {/* Formulário */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-lg font-semibold mb-4">Nova Reserva</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Área */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Área *</label>
-              <select
-                value={formData.area}
-                onChange={handleAreaChange}
-                required
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">Selecione...</option>
-                {Object.entries(areasConfig).map(([key, config]) => (
-                  <option key={key} value={key}>{config.nome}</option>
-                ))}
-              </select>
-            </div>
+      <div style={{ background: "#1e293b", padding: "24px", borderRadius: "12px", marginBottom: "24px" }}>
+        <h3 style={{ color: "#f1f5f9", marginBottom: "12px" }}>Nova reserva</h3>
 
-            {/* Unidade (só aparece se for churrasqueira) */}
-            {formData.area === "churrasqueira" && (
-              <div>
-                <label className="block text-sm font-medium mb-1">Unidade *</label>
-                <select
-                  value={formData.unidade}
-                  onChange={(e) => setFormData({ ...formData, unidade: e.target.value })}
-                  required
-                  className="w-full border rounded px-3 py-2"
-                >
-                  <option value="01">Churrasqueira 01</option>
-                  <option value="02">Churrasqueira 02</option>
-                  <option value="03">Churrasqueira 03</option>
-                </select>
-              </div>
-            )}
-
-            {/* Data */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Data *</label>
-              <input
-                type="date"
-                value={formData.data}
-                onChange={(e) => setFormData({ ...formData, data: e.target.value })}
-                required
-                min={new Date().toISOString().split("T")[0]}
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-
-            {/* Horário Início */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Horário Início *</label>
-              <input
-                type="time"
-                value={formData.horarioInicio}
-                onChange={(e) => setFormData({ ...formData, horarioInicio: e.target.value })}
-                required
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-
-            {/* Horário Fim */}
-            <div>
-              <label className="block text-sm font-medium mb-1">Horário Fim *</label>
-              <input
-                type="time"
-                value={formData.horarioFim}
-                onChange={(e) => setFormData({ ...formData, horarioFim: e.target.value })}
-                required
-                className="w-full border rounded px-3 py-2"
-              />
-            </div>
-          </div>
-
-          {/* Observações */}
-          <div>
-            <label className="block text-sm font-medium mb-1">Observações</label>
-            <textarea
-              value={formData.observacoes}
-              onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-              rows="3"
-              className="w-full border rounded px-3 py-2"
-              placeholder="Informações adicionais..."
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
-          >
-            {loading ? "Salvando..." : "Criar Reserva"}
-          </button>
-        </form>
-      </div>
-
-      {/* Lista de Reservas */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold mb-4">Reservas Realizadas</h2>
-        <div className="space-y-3">
-          {reservas.map((reserva) => (
-            <div key={reserva.id} className="border-l-4 border-blue-500 bg-gray-50 p-4 rounded">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold text-lg">{reserva.areaNome}</h3>
-                  <p className="text-sm text-gray-600">
-                    📅 {reserva.data?.toDate().toLocaleDateString("pt-BR")} | 
-                    ⏰ {reserva.horarioInicio} - {reserva.horarioFim}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    🏠 {reserva.apartamento} — {reserva.morador}
-                  </p>
-                  {reserva.observacoes && (
-                    <p className="text-sm text-gray-500 mt-1">💬 {reserva.observacoes}</p>
-                  )}
-                </div>
-                <span className={`px-3 py-1 rounded text-sm ${
-                  reserva.status === "confirmada" ? "bg-green-100 text-green-800" : "bg-gray-100"
-                }`}>
-                  {reserva.status}
-                </span>
-              </div>
-            </div>
+        <select style={inp} value={area} onChange={(e) => { setArea(e.target.value); setUnidade("1"); }}>
+          {Object.entries(areasConfig).map(([key, config]) => (
+            <option key={key} value={key}>{config.nome}</option>
           ))}
+        </select>
+
+        {area === "churrasqueira" && (
+          <select style={inp} value={unidade} onChange={(e) => setUnidade(e.target.value)}>
+            <option value="1">Churrasqueira 01</option>
+            <option value="2">Churrasqueira 02</option>
+            <option value="3">Churrasqueira 03</option>
+          </select>
+        )}
+
+        <input style={inp} placeholder="Apartamento (ex: 302)" value={apartamento} onChange={(e) => setApartamento(e.target.value)} />
+        <input style={inp} placeholder="Nome do responsavel" value={responsavel} onChange={(e) => setResponsavel(e.target.value)} />
+        <input style={inp} type="date" value={data} onChange={(e) => setData(e.target.value)} />
+
+        <div style={{ display: "flex", gap: "8px" }}>
+          <input style={{ ...inp, marginRight: "0" }} type="time" value={horarioInicio} onChange={(e) => setHorarioInicio(e.target.value)} />
+          <input style={inp} type="time" value={horarioFim} onChange={(e) => setHorarioFim(e.target.value)} />
         </div>
+
+        <input style={inp} placeholder="Observacao (opcional)" value={observacao} onChange={(e) => setObservacao(e.target.value)} />
+
+        {erro && <p style={{ color: "#ef4444", fontSize: "0.9rem", marginBottom: "8px" }}>{erro}</p>}
+
+        <button style={btn} onClick={realizarReserva} disabled={salvando}>
+          {salvando ? "Reservando..." : "Confirmar reserva"}
+        </button>
       </div>
+
+      {reservas.length === 0 && <p style={{ color: "#64748b", textAlign: "center" }}>Nenhuma reserva registrada ainda.</p>}
+
+      {reservas.map((r) => (
+        <div key={r.id} style={{ background: "#1e293b", padding: "20px", borderRadius: "12px", marginBottom: "12px", borderLeft: "4px solid " + (corStatus[r.status] || "#38bdf8") }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+            <div>
+              <h4 style={{ color: "#f1f5f9", margin: 0, marginBottom: "4px" }}>{r.area}</h4>
+              <p style={{ color: "#94a3b8", margin: 0, fontSize: "0.9rem" }}>Apto {r.apartamento} — {r.responsavel}</p>
+            </div>
+            <span style={{ background: (corStatus[r.status] || "#38bdf8") + "22", color: corStatus[r.status] || "#38bdf8", padding: "4px 10px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: "bold", textTransform: "capitalize" }}>
+              {r.status}
+            </span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+            <span style={{ color: "#475569", fontSize: "0.85rem" }}>
+              {r.data} — {r.horarioInicio} às {r.horarioFim}
+            </span>
+            {r.observacao && <span style={{ color: "#64748b", fontSize: "0.85rem" }}>💬 {r.observacao}</span>}
+            {r.status !== "cancelada" && (
+              <button onClick={() => cancelarReserva(r.id)} style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
+                Cancelar
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
+
+const inp = { width: "100%", padding: "10px", marginBottom: "10px", borderRadius: "8px", border: "1px solid #334155", background: "#0f172a", color: "#f1f5f9", fontSize: "1rem", boxSizing: "border-box" };
+const btn = { padding: "10px 24px", background: "#38bdf8", color: "#0f172a", border: "none", borderRadius: "8px", fontWeight: "bold", cursor: "pointer", fontSize: "1rem", marginTop: "8px" };
