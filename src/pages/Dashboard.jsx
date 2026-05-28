@@ -16,6 +16,8 @@ export default function Dashboard({ condominio }) {
     agendaHoje: 0,
     totalReceitas: 0,
     totalDespesas: 0,
+    totalMoradores: 0,
+    totalAchados: 0,
     veiculosAlerta: [],
   });
 
@@ -24,8 +26,23 @@ export default function Dashboard({ condominio }) {
   }, []);
 
   async function carregarStats() {
-    const [avisos, ocorrencias, ocorrenciasAbertas, reservas, visitantes, documentos, financeiro, veiculos, pets, enquetesAtivas, veiculosVisitantes, agendaHoje] =
-      await Promise.all([
+    try {
+      const [
+        avisos,
+        ocorrencias,
+        ocorrenciasAbertas,
+        reservas,
+        visitantes,
+        documentos,
+        financeiro,
+        veiculos,
+        pets,
+        enquetesAtivas,
+        veiculosVisitantes,
+        agendaHoje,
+        moradores,
+        achadosPerdidos,
+      ] = await Promise.all([
         getDocs(collection(db, "avisos")),
         getDocs(collection(db, "ocorrencias")),
         getDocs(query(collection(db, "ocorrencias"), where("status", "==", "aberta"))),
@@ -35,41 +52,50 @@ export default function Dashboard({ condominio }) {
         getDocs(collection(db, "financeiro")),
         getDocs(collection(db, "veiculos")),
         getDocs(collection(db, "pets")),
-        getDocs(query(collection(db, "agenda_visitas"), where("data", "==", new Date().toISOString().split("T")[0]))),
         getDocs(query(collection(db, "enquetes"), where("ativa", "==", true))),
         getDocs(query(collection(db, "visitantes"), where("status", "==", "presente"))),
+        getDocs(query(collection(db, "agenda_visitas"), where("data", "==", new Date().toISOString().split("T")[0]))),
+        getDocs(collection(db, "moradores")),
+        getDocs(collection(db, "achados_perdidos")),
       ]);
 
-    const agora = new Date();
-    const veiculosAlerta = veiculosVisitantes.docs
-      .filter((d) => {
-        const dados = d.data();
-        if (!dados.placa || !dados.entrada) return false;
-        const entrada = dados.entrada.toDate();
-        const horas = (agora - entrada) / (1000 * 60 * 60);
-        return horas >= 24;
-      })
-      .map((d) => d.data());
+      const agora = new Date();
+      const veiculosAlerta = veiculosVisitantes.docs
+        .filter((d) => {
+          const dados = d.data();
+          if (!dados.placa || !dados.entrada) return false;
+          const entrada = dados.entrada.toDate();
+          const horas = (agora - entrada) / (1000 * 60 * 60);
+          return horas >= 24;
+        })
+        .map((d) => d.data());
 
-    const lancamentos = financeiro.docs.map((d) => d.data());
-    const totalReceitas = lancamentos.filter((l) => l.tipo === "receita").reduce((acc, l) => acc + l.valor, 0);
-    const totalDespesas = lancamentos.filter((l) => l.tipo === "despesa").reduce((acc, l) => acc + l.valor, 0);
+      const lancamentos = financeiro.docs.map((d) => d.data());
+      const totalReceitas = lancamentos.filter((l) => l.tipo === "receita").reduce((acc, l) => acc + l.valor, 0);
+      const totalDespesas = lancamentos.filter((l) => l.tipo === "despesa").reduce((acc, l) => acc + l.valor, 0);
 
-    setStats({
-      totalAvisos: avisos.size,
-      totalOcorrencias: ocorrencias.size,
-      ocorrenciasAbertas: ocorrenciasAbertas.size,
-      totalReservas: reservas.size,
-      visitantesPresentes: visitantes.size,
-      totalDocumentos: documentos.size,
-      totalVeiculos: veiculos.size,
-      totalPets: pets.size,
-      enquetesAtivas: enquetesAtivas.size,
-      agendaHoje: agendaHoje.size,
-      totalReceitas,
-      totalDespesas,
-      veiculosAlerta,
-    });
+      setStats({
+        totalAvisos: avisos.size,
+        totalOcorrencias: ocorrencias.size,
+        ocorrenciasAbertas: ocorrenciasAbertas.size,
+        totalReservas: reservas.size,
+        visitantesPresentes: visitantes.size,
+        totalDocumentos: documentos.size,
+        totalVeiculos: veiculos.size,
+        totalPets: pets.size,
+        enquetesAtivas: enquetesAtivas.size,
+        agendaHoje: agendaHoje.size,
+        totalReceitas,
+        totalDespesas,
+        totalMoradores: moradores.size,
+        totalAchados: achadosPerdidos.size,
+        veiculosAlerta,
+      });
+
+      console.log("✅ Cards carregados - Moradores:", moradores.size, "| Achados:", achadosPerdidos.size);
+    } catch (erro) {
+      console.error("❌ Erro ao carregar stats:", erro);
+    }
   }
 
   function formatarMoeda(valor) {
@@ -83,6 +109,8 @@ export default function Dashboard({ condominio }) {
     { label: "Ocorrencias abertas", valor: stats.ocorrenciasAbertas, cor: "#ef4444", icone: "🚨" },
     { label: "Reservas realizadas", valor: stats.totalReservas, cor: "#a78bfa", icone: "📅" },
     { label: "Visitantes presentes", valor: stats.visitantesPresentes, cor: "#22c55e", icone: "👥" },
+    { label: "Moradores cadastrados", valor: stats.totalMoradores, cor: "#3b82f6", icone: "🏠" },
+    { label: "Achados e Perdidos", valor: stats.totalAchados, cor: "#f59e0b", icone: "🔍" },
     { label: "Documentos", valor: stats.totalDocumentos, cor: "#f59e0b", icone: "📄" },
     { label: "Veiculos cadastrados", valor: stats.totalVeiculos, cor: "#38bdf8", icone: "🚗" },
     { label: "Animais cadastrados", valor: stats.totalPets, cor: "#a78bfa", icone: "🐾" },
