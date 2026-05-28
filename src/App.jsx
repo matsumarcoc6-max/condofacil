@@ -15,6 +15,7 @@ import Veiculos from "./pages/Veiculos";
 import Pets from "./pages/Pets";
 import AgendaVisitas from "./pages/AgendaVisitas";
 import AchadosPerdidos from "./pages/AchadosPerdidos";
+import TelefonesUteis from "./pages/TelefonesUteis";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -70,6 +71,7 @@ export default function App() {
     const { doc, getDoc } = await import("firebase/firestore");
     const perfilDoc = await getDoc(doc(db, "usuarios", uid));
     if (perfilDoc.exists()) {
+      console.log("PERFIL:", perfilDoc.data().perfil);
       setPerfil(perfilDoc.data().perfil);
     }
   }
@@ -131,7 +133,7 @@ export default function App() {
     );
   }
 
- const menuItems = [
+  const menuItems = [
     { id: "dashboard", label: "🏠 Dashboard", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
     { id: "avisos", label: "📢 Avisos", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
     { id: "ocorrencias", label: "🚨 Ocorrencias", perfis: ["admin_geral", "sindico", "morador"] },
@@ -145,12 +147,12 @@ export default function App() {
     { id: "veiculos", label: "🚗 Veiculos", perfis: ["admin_geral", "sindico", "porteiro"] },
     { id: "pets", label: "🐾 Animais", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "achados", label: "🔍 Achados e Perdidos", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
+    { id: "telefones", label: "📞 Telefones Úteis", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
   ];
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "#0f172a", fontFamily: "sans-serif" }}>
 
-      {/* Botão hamburguer — só no mobile */}
       {isMobile && (
         <button
           onClick={() => setMenuAberto(!menuAberto)}
@@ -160,7 +162,6 @@ export default function App() {
         </button>
       )}
 
-      {/* Overlay escuro quando menu mobile aberto */}
       {isMobile && menuAberto && (
         <div
           onClick={() => setMenuAberto(false)}
@@ -168,7 +169,6 @@ export default function App() {
         />
       )}
 
-      {/* Sidebar */}
       <div style={{
         width: "240px",
         minWidth: "240px",
@@ -178,6 +178,7 @@ export default function App() {
         flexDirection: "column",
         justifyContent: "space-between",
         minHeight: "100vh",
+        overflowY: "auto",
         position: isMobile ? "fixed" : "relative",
         top: 0,
         left: 0,
@@ -215,9 +216,7 @@ export default function App() {
           Sair
         </button>
       </div>
-
-      {/* Conteúdo principal */}
-      <div style={{
+            <div style={{
         flex: 1,
         overflowY: "auto",
         padding: isMobile ? "64px 16px 16px" : "20px",
@@ -234,8 +233,9 @@ export default function App() {
         {pagina === "moradores" && <Moradores />}
         {pagina === "veiculos" && <Veiculos />}
         {pagina === "pets" && <Pets />}
-{pagina === "agenda" && <AgendaVisitas />}
-{pagina === "achados" && <AchadosPerdidos />}
+        {pagina === "agenda" && <AgendaVisitas />}
+        {pagina === "achados" && <AchadosPerdidos />}
+        {pagina === "telefones" && <TelefonesUteis />}
       </div>
     </div>
   );
