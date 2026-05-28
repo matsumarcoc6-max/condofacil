@@ -105,18 +105,18 @@ export default function Dashboard({ condominio }) {
   const saldo = stats.totalReceitas - stats.totalDespesas;
 
   const cards = [
-    { label: "Avisos publicados", valor: stats.totalAvisos, cor: "#38bdf8", icone: "📢" },
-    { label: "Ocorrencias abertas", valor: stats.ocorrenciasAbertas, cor: "#ef4444", icone: "🚨" },
-    { label: "Reservas realizadas", valor: stats.totalReservas, cor: "#a78bfa", icone: "📅" },
-    { label: "Visitantes presentes", valor: stats.visitantesPresentes, cor: "#22c55e", icone: "👥" },
-    { label: "Moradores cadastrados", valor: stats.totalMoradores, cor: "#3b82f6", icone: "🏠" },
-    { label: "Achados e Perdidos", valor: stats.totalAchados, cor: "#f59e0b", icone: "🔍" },
-    { label: "Documentos", valor: stats.totalDocumentos, cor: "#f59e0b", icone: "📄" },
-    { label: "Veiculos cadastrados", valor: stats.totalVeiculos, cor: "#38bdf8", icone: "🚗" },
-    { label: "Animais cadastrados", valor: stats.totalPets, cor: "#a78bfa", icone: "🐾" },
-    { label: "Enquetes ativas", valor: stats.enquetesAtivas, cor: "#22c55e", icone: "📊" },
-    { label: "Visitas hoje", valor: stats.agendaHoje, cor: "#38bdf8", icone: "📋" },
-  ];
+  { label: "Moradores cadastrados", valor: stats.totalMoradores, cor: "#3b82f6", icone: "🏠" },
+  { label: "Visitantes presentes", valor: stats.visitantesPresentes, cor: "#22c55e", icone: "👥" },
+  { label: "Visitas hoje", valor: stats.agendaHoje, cor: "#38bdf8", icone: "📋" },
+  { label: "Veiculos cadastrados", valor: stats.totalVeiculos, cor: "#06b6d4", icone: "🚗" },
+  { label: "Animais cadastrados", valor: stats.totalPets, cor: "#a78bfa", icone: "🐾" },
+  { label: "Avisos publicados", valor: stats.totalAvisos, cor: "#38bdf8", icone: "📢" },
+  { label: "Ocorrencias abertas", valor: stats.ocorrenciasAbertas, cor: "#ef4444", icone: "🚨" },
+  { label: "Reservas realizadas", valor: stats.totalReservas, cor: "#8b5cf6", icone: "📅" },
+  { label: "Documentos", valor: stats.totalDocumentos, cor: "#10b981", icone: "📄" },
+  { label: "Achados e Perdidos", valor: stats.totalAchados, cor: "#f59e0b", icone: "🔍" },
+  { label: "Enquetes ativas", valor: stats.enquetesAtivas, cor: "#ec4899", icone: "📊" },
+];
 
   return (
     <div style={{ padding: "24px" }}>
