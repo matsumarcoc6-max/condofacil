@@ -12,7 +12,11 @@ import {
 } from "firebase/firestore";
 
 const categorias = ["Emergência", "Manutenção", "Administração", "Outros"];
-
+const contatosFixos = [
+  { id: "fixo-bombeiros", nome: "Bombeiros", telefone: "193", categoria: "Emergência" },
+  { id: "fixo-samu", nome: "SAMU", telefone: "192", categoria: "Emergência" },
+  { id: "fixo-policia", nome: "Polícia Militar", telefone: "190", categoria: "Emergência" },
+];
 const corCategoria = {
   Emergência: "#ef4444",
   Manutenção: "#f59e0b",
@@ -57,8 +61,10 @@ export default function TelefonesUteis() {
     await carregar();
   };
 
-  const filtrados =
-    filtro === "Todos" ? contatos : contatos.filter((c) => c.categoria === filtro);
+  const todos = [...contatosFixos, ...contatos];
+
+const filtrados =
+  filtro === "Todos" ? todos : todos.filter((c) => c.categoria === filtro);
 
   return (
     <div style={{ padding: "24px" }}>
