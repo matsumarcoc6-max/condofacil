@@ -165,19 +165,21 @@ const filtrados =
               {c.categoria}
             </span>
           </div>
-          <button
-            onClick={() => excluir(c.id)}
-            style={{
-              background: "transparent",
-              border: "none",
-              color: "#ef4444",
-              cursor: "pointer",
-              fontSize: "0.85rem",
-              fontWeight: "600",
-            }}
-          >
-            Excluir
-          </button>
+          {!c.id.startsWith("fixo-") && (
+     <button
+  onClick={() => excluir(c.id)}
+  style={{
+    background: "transparent",
+    border: "none",
+    color: "#ef4444",
+    cursor: "pointer",
+    fontSize: "0.85rem",
+    fontWeight: "600",
+  }}
+>
+  Excluir
+</button>
+          )}
         </div>
       ))}
     </div>
