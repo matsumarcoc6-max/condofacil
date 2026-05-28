@@ -13,6 +13,13 @@ import {
 
 const categorias = ["Emergência", "Manutenção", "Administração", "Outros"];
 
+const corCategoria = {
+  Emergência: "#ef4444",
+  Manutenção: "#f59e0b",
+  Administração: "#38bdf8",
+  Outros: "#94a3b8",
+};
+
 export default function TelefonesUteis() {
   const [contatos, setContatos] = useState([]);
   const [nome, setNome] = useState("");
@@ -53,36 +60,28 @@ export default function TelefonesUteis() {
   const filtrados =
     filtro === "Todos" ? contatos : contatos.filter((c) => c.categoria === filtro);
 
-  const corCategoria = (cat) => {
-    const cores = {
-      Emergência: "bg-red-100 text-red-700",
-      Manutenção: "bg-yellow-100 text-yellow-700",
-      Administração: "bg-blue-100 text-blue-700",
-      Outros: "bg-gray-100 text-gray-700",
-    };
-    return cores[cat] || "bg-gray-100 text-gray-700";
-  };
-
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">📞 Telefones Úteis</h1>
+    <div style={{ padding: "24px" }}>
+      <h2 style={{ color: "#38bdf8", marginBottom: "20px" }}>📞 Telefones Úteis</h2>
 
       {/* Formulário */}
-      <div className="bg-white rounded-2xl shadow p-6 mb-6 space-y-3">
+      <div style={{ background: "#1e293b", padding: "24px", borderRadius: "12px", marginBottom: "24px" }}>
+        <h3 style={{ color: "#f1f5f9", marginBottom: "12px" }}>Adicionar contato</h3>
+
         <input
-          className="w-full border rounded-lg px-3 py-2 text-sm"
+          style={inp}
           placeholder="Nome do contato (ex: Portaria, Bombeiros...)"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
         />
         <input
-          className="w-full border rounded-lg px-3 py-2 text-sm"
+          style={inp}
           placeholder="Telefone (ex: (11) 99999-9999)"
           value={telefone}
           onChange={(e) => setTelefone(e.target.value)}
         />
         <select
-          className="w-full border rounded-lg px-3 py-2 text-sm"
+          style={inp}
           value={categoria}
           onChange={(e) => setCategoria(e.target.value)}
         >
@@ -90,26 +89,30 @@ export default function TelefonesUteis() {
             <option key={c}>{c}</option>
           ))}
         </select>
-        <button
-          onClick={publicar}
-          disabled={loading}
-          className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-semibold hover:bg-blue-700 transition"
-        >
+
+        <button style={btn} onClick={publicar} disabled={loading}>
           {loading ? "Salvando..." : "Adicionar contato"}
         </button>
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
         {["Todos", ...categorias].map((f) => (
           <button
             key={f}
             onClick={() => setFiltro(f)}
-            className={`px-3 py-1 rounded-full text-xs font-medium border transition ${
-              filtro === f
-                ? "bg-blue-600 text-white border-blue-600"
-                : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
-            }`}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "20px",
+              border: "1px solid",
+              borderColor: filtro === f ? (corCategoria[f] || "#38bdf8") : "#334155",
+              background: filtro === f ? (corCategoria[f] || "#38bdf8") + "22" : "transparent",
+              color: filtro === f ? (corCategoria[f] || "#38bdf8") : "#94a3b8",
+              fontSize: "0.82rem",
+              fontWeight: "600",
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
           >
             {f}
           </button>
@@ -117,30 +120,84 @@ export default function TelefonesUteis() {
       </div>
 
       {/* Lista */}
-      <div className="space-y-3">
-        {filtrados.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-8">Nenhum contato cadastrado.</p>
-        )}
-        {filtrados.map((c) => (
-          <div key={c.id} className="bg-white rounded-2xl shadow p-4 flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${corCategoria(c.categoria)}`}>
-                  {c.categoria}
-                </span>
-              </div>
-              <p className="font-semibold text-gray-800">{c.nome}</p>
-              <p className="text-blue-600 font-medium text-sm">{c.telefone}</p>
-            </div>
-            <button
-              onClick={() => excluir(c.id)}
-              className="text-red-400 hover:text-red-600 text-xs font-medium transition"
+      {filtrados.length === 0 && (
+        <p style={{ color: "#64748b", textAlign: "center", marginTop: "32px" }}>
+          Nenhum contato cadastrado.
+        </p>
+      )}
+      {filtrados.map((c) => (
+        <div
+          key={c.id}
+          style={{
+            background: "#1e293b",
+            padding: "16px 20px",
+            borderRadius: "12px",
+            marginBottom: "8px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            borderLeft: "4px solid " + (corCategoria[c.categoria] || "#94a3b8"),
+          }}
+        >
+          <div>
+            <p style={{ color: "#f1f5f9", margin: 0, fontWeight: "500" }}>{c.nome}</p>
+            <p style={{ color: "#38bdf8", margin: "4px 0 0", fontSize: "0.85rem" }}>
+              {c.telefone}
+            </p>
+            <span
+              style={{
+                background: (corCategoria[c.categoria] || "#94a3b8") + "22",
+                color: corCategoria[c.categoria] || "#94a3b8",
+                padding: "2px 8px",
+                borderRadius: "20px",
+                fontSize: "0.75rem",
+                fontWeight: "bold",
+                display: "inline-block",
+                marginTop: "6px",
+              }}
             >
-              Excluir
-            </button>
+              {c.categoria}
+            </span>
           </div>
-        ))}
-      </div>
+          <button
+            onClick={() => excluir(c.id)}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#ef4444",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+              fontWeight: "600",
+            }}
+          >
+            Excluir
+          </button>
+        </div>
+      ))}
     </div>
   );
 }
+
+const inp = {
+  width: "100%",
+  padding: "10px",
+  marginBottom: "10px",
+  borderRadius: "8px",
+  border: "1px solid #334155",
+  background: "#0f172a",
+  color: "#f1f5f9",
+  fontSize: "1rem",
+  boxSizing: "border-box",
+};
+
+const btn = {
+  padding: "10px 24px",
+  background: "#38bdf8",
+  color: "#0f172a",
+  border: "none",
+  borderRadius: "8px",
+  fontWeight: "bold",
+  cursor: "pointer",
+  fontSize: "1rem",
+  marginTop: "8px",
+};
