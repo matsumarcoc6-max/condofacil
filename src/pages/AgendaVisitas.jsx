@@ -150,7 +150,7 @@ export default function AgendaVisitas() {
                 Apto {v.apartamento}{v.motivo ? ` — ${v.motivo}` : ""}
               </p>
               <p style={{ color: "#64748b", margin: 0, fontSize: "0.85rem" }}>
-                📅 {v.data}{v.horario ? ` às ${v.horario}` : ""}
+                📅 {v.data ? v.data.split("-").reverse().join("/") : ""}{v.horario ? ` às ${v.horario}` : ""}
               </p>
             </div>
             <span style={{ background: (corStatus[v.status] || "#38bdf8") + "22", color: corStatus[v.status] || "#38bdf8", padding: "4px 10px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: "bold", whiteSpace: "nowrap" }}>
