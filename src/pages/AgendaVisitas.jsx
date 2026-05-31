@@ -98,8 +98,19 @@ export default function AgendaVisitas() {
 
         <input style={inp} placeholder="Nome do visitante *" value={nomeVisitante} onChange={(e) => setNomeVisitante(e.target.value)} />
         <input style={inp} placeholder="Apartamento destino *" value={apartamento} onChange={(e) => setApartamento(e.target.value)} />
-        <input style={inp} type="date" value={data} onChange={(e) => setData(e.target.value)} />
-        <input style={inp} type="time" value={horario} onChange={(e) => setHorario(e.target.value)} />
+        <input 
+  type="date" 
+  value={data} 
+  onChange={(e) => setData(e.target.value)}
+  style={{ ...inp, colorScheme: "dark" }}
+/>
+
+       <input 
+  type="time" 
+  value={horario} 
+  onChange={(e) => setHorario(e.target.value)}
+  style={{ ...inp, colorScheme: "dark" }}
+/>
         <input style={inp} placeholder="Motivo da visita (opcional)" value={motivo} onChange={(e) => setMotivo(e.target.value)} />
 
         {sucesso && <p style={{ color: "#22c55e", fontSize: "0.9rem", marginBottom: "8px" }}>{sucesso}</p>}
@@ -117,7 +128,7 @@ export default function AgendaVisitas() {
             onClick={() => setFiltro(f)}
             style={{ padding: "6px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "0.85rem", background: filtro === f ? "#38bdf8" : "#1e293b", color: filtro === f ? "#0f172a" : "#94a3b8" }}
           >
-            {f === "hoje" ? "Hoje" : f === "aguardando" ? "Aguardando" : "Todas"}
+            {f === "h <inoje" ? "Hoje" : f === "aguardando" ? "Aguardando" : "Todas"}
           </button>
         ))}
       </div>
