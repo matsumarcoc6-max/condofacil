@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { Routes, Route } from "react-router-dom";
 import Avisos from "./pages/Avisos";
 import Ocorrencias from "./pages/Ocorrencias";
 import Visitantes from "./pages/Visitantes";
@@ -16,6 +17,7 @@ import Pets from "./pages/Pets";
 import AgendaVisitas from "./pages/AgendaVisitas";
 import AchadosPerdidos from "./pages/AchadosPerdidos";
 import TelefonesUteis from "./pages/TelefonesUteis";
+import VisitaPublica from "./pages/VisitaPublica";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -68,10 +70,8 @@ export default function App() {
     if (!snap.empty) {
       setCondominio(snap.docs[0].data());
     }
-    const { doc, getDoc } = await import("firebase/firestore");
     const perfilDoc = await getDoc(doc(db, "usuarios", uid));
     if (perfilDoc.exists()) {
-      console.log("PERFIL:", perfilDoc.data().perfil);
       setPerfil(perfilDoc.data().perfil);
     }
   }
@@ -80,63 +80,13 @@ export default function App() {
     await signOut(auth);
     setUser(null);
     setCondominio(null);
-  }
-
-  if (!user) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.card}>
-          <h1 style={styles.titulo}>CondoFácil</h1>
-          <p style={styles.subtitulo}>Acesse sua conta</p>
-          <input
-            style={styles.input}
-            type="email"
-            placeholder="E-mail"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <div style={{ position: "relative", marginBottom: "12px" }}>
-            <input
-              style={{ ...styles.input, marginBottom: 0 }}
-              type={mostrarSenha ? "text" : "password"}
-              placeholder="Senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <span
-              onClick={() => setMostrarSenha(!mostrarSenha)}
-              style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "#64748b", fontSize: "1.1rem" }}
-            >
-              {mostrarSenha ? "🙈" : "👁️"}
-            </span>
-          </div>
-          {erro && <p style={styles.erro}>{erro}</p>}
-          {!esqueceuSenha ? (
-            <>
-              <button style={styles.botao} onClick={login}>Entrar</button>
-              <p onClick={() => { setEsqueceuSenha(true); setErro(""); }} style={{ color: "#38bdf8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}>
-                Esqueci minha senha
-              </p>
-            </>
-          ) : (
-            <>
-              <input style={styles.input} type="email" placeholder="Digite seu e-mail" value={emailRecuperacao} onChange={(e) => setEmailRecuperacao(e.target.value)} />
-              {mensagemRecuperacao && <p style={{ color: "#22c55e", fontSize: "0.85rem", marginBottom: "8px" }}>{mensagemRecuperacao}</p>}
-              <button style={styles.botao} onClick={recuperarSenha}>Enviar e-mail de recuperação</button>
-              <p onClick={() => { setEsqueceuSenha(false); setMensagemRecuperacao(""); }} style={{ color: "#94a3b8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}>
-                Voltar ao login
-              </p>
-            </>
-          )}
-        </div>
-      </div>
-    );
+    setPerfil(null);
   }
 
   const menuItems = [
     { id: "dashboard", label: "🏠 Dashboard", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
     { id: "avisos", label: "📢 Avisos", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
-    { id: "ocorrencias", label: "🚨 Ocorrencias", perfis: ["admin_geral", "sindico", "morador"] },
+    { id: "ocorrencias", label: "🚨 Ocorrências", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "reservas", label: "📅 Reservas", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "visitantes", label: "👥 Visitantes", perfis: ["admin_geral", "sindico", "porteiro"] },
     { id: "agenda", label: "📋 Agenda Visitas", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
@@ -144,145 +94,160 @@ export default function App() {
     { id: "financeiro", label: "💰 Financeiro", perfis: ["admin_geral", "sindico"] },
     { id: "enquetes", label: "📊 Enquetes", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "moradores", label: "🏘️ Moradores", perfis: ["admin_geral", "sindico"] },
-    { id: "veiculos", label: "🚗 Veiculos", perfis: ["admin_geral", "sindico", "porteiro"] },
+    { id: "veiculos", label: "🚗 Veículos", perfis: ["admin_geral", "sindico", "porteiro"] },
     { id: "pets", label: "🐾 Animais", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "achados", label: "🔍 Achados e Perdidos", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
     { id: "telefones", label: "📞 Telefones Úteis", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
   ];
 
+  const renderPagina = () => {
+    switch (pagina) {
+      case "dashboard": return <Dashboard perfil={perfil} />;
+      case "avisos": return <Avisos perfil={perfil} />;
+      case "ocorrencias": return <Ocorrencias perfil={perfil} />;
+      case "reservas": return <Reservas perfil={perfil} />;
+      case "visitantes": return <Visitantes perfil={perfil} />;
+      case "agenda": return <AgendaVisitas perfil={perfil} user={user} />;
+      case "documentos": return <Documentos perfil={perfil} />;
+      case "financeiro": return <Financeiro perfil={perfil} />;
+      case "enquetes": return <Enquetes perfil={perfil} />;
+      case "moradores": return <Moradores perfil={perfil} />;
+      case "veiculos": return <Veiculos perfil={perfil} />;
+      case "pets": return <Pets perfil={perfil} />;
+      case "achados": return <AchadosPerdidos perfil={perfil} />;
+      case "telefones": return <TelefonesUteis perfil={perfil} />;
+      default: return <Dashboard perfil={perfil} />;
+    }
+  };
+
+  // Rota pública — acessível sem login
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#0f172a", fontFamily: "sans-serif" }}>
-
-      {isMobile && (
-        <button
-          onClick={() => setMenuAberto(!menuAberto)}
-          style={{ position: "fixed", top: "12px", left: "12px", zIndex: 1001, background: "#1e293b", border: "none", color: "#38bdf8", fontSize: "24px", width: "44px", height: "44px", borderRadius: "8px", cursor: "pointer" }}
-        >
-          ☰
-        </button>
-      )}
-
-      {isMobile && menuAberto && (
-        <div
-          onClick={() => setMenuAberto(false)}
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999 }}
-        />
-      )}
-
-      <div style={{
-        width: "240px",
-        minWidth: "240px",
-        background: "#1e293b",
-        padding: "24px 16px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        minHeight: "100vh",
-        overflowY: "auto",
-        position: isMobile ? "fixed" : "relative",
-        top: 0,
-        left: 0,
-        zIndex: 1000,
-        transform: isMobile ? (menuAberto ? "translateX(0)" : "translateX(-100%)") : "translateX(0)",
-        transition: "transform 0.3s ease",
-      }}>
-        <div>
-          <h2 style={{ color: "#38bdf8", fontSize: "1.4rem", marginBottom: "4px" }}>CondoFácil</h2>
-          {condominio && <p style={{ color: "#64748b", fontSize: "0.8rem", marginTop: "4px" }}>{condominio.nome}</p>}
-          <nav style={{ marginTop: "32px" }}>
-            {menuItems
-              .filter((item) => !perfil || item.perfis.includes(perfil))
-              .map((item) => (
-                <button
-                  key={item.id}
-                  style={{
-                    display: "block", width: "100%", padding: "10px 16px", marginBottom: "4px",
-                    borderRadius: "8px", border: "none", textAlign: "left", cursor: "pointer",
-                    fontSize: "0.95rem", fontWeight: "500",
-                    background: pagina === item.id ? "#38bdf8" : "transparent",
-                    color: pagina === item.id ? "#0f172a" : "#94a3b8",
-                  }}
-                  onClick={() => { setPagina(item.id); setMenuAberto(false); }}
+    <Routes>
+      <Route path="/v/:id" element={<VisitaPublica />} />
+      <Route path="*" element={
+        !user ? (
+          // ===== TELA DE LOGIN =====
+          <div style={styles.container}>
+            <div style={styles.card}>
+              <h1 style={styles.titulo}>CondoFácil</h1>
+              <p style={styles.subtitulo}>Acesse sua conta</p>
+              <input
+                style={styles.input}
+                type="email"
+                placeholder="E-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <div style={{ position: "relative", marginBottom: "12px" }}>
+                <input
+                  style={{ ...styles.input, marginBottom: 0 }}
+                  type={mostrarSenha ? "text" : "password"}
+                  placeholder="Senha"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <span
+                  onClick={() => setMostrarSenha(!mostrarSenha)}
+                  style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "#64748b", fontSize: "1.1rem" }}
                 >
-                  {item.label}
-                </button>
-              ))}
-          </nav>
-        </div>
-        <button
-          style={{ padding: "10px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "8px", cursor: "pointer", width: "100%", fontSize: "0.9rem" }}
-          onClick={logout}
-        >
-          Sair
-        </button>
-      </div>
+                  {mostrarSenha ? "🙈" : "👁️"}
+                </span>
+              </div>
+              {erro && <p style={styles.erro}>{erro}</p>}
+              {!esqueceuSenha ? (
+                <>
+                  <button style={styles.botao} onClick={login}>Entrar</button>
+                  <p onClick={() => { setEsqueceuSenha(true); setErro(""); }} style={{ color: "#38bdf8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}>
+                    Esqueci minha senha
+                  </p>
+                </>
+              ) : (
+                <>
+                  <input style={styles.input} type="email" placeholder="Digite seu e-mail" value={emailRecuperacao} onChange={(e) => setEmailRecuperacao(e.target.value)} />
+                  {mensagemRecuperacao && <p style={{ color: "#22c55e", fontSize: "0.85rem", marginBottom: "8px" }}>{mensagemRecuperacao}</p>}
+                  <button style={styles.botao} onClick={recuperarSenha}>Enviar e-mail de recuperação</button>
+                  <p onClick={() => { setEsqueceuSenha(false); setMensagemRecuperacao(""); }} style={{ color: "#94a3b8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}>
+                    Voltar ao login
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        ) : (
+          // ===== APP PRINCIPAL =====
+          <div style={{ display: "flex", minHeight: "100vh", background: "#0f172a", fontFamily: "sans-serif" }}>
+
+            {isMobile && (
+              <button
+                onClick={() => setMenuAberto(!menuAberto)}
+                style={{ position: "fixed", top: "12px", left: "12px", zIndex: 1001, background: "#1e293b", border: "none", color: "#38bdf8", fontSize: "24px", width: "44px", height: "44px", borderRadius: "8px", cursor: "pointer" }}
+              >
+                ☰
+              </button>
+            )}
+
+            {isMobile && menuAberto && (
+              <div onClick={() => setMenuAberto(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999 }} />
+            )}
+
+            {/* SIDEBAR */}
             <div style={{
-        flex: 1,
-        overflowY: "auto",
-        padding: isMobile ? "64px 16px 16px" : "20px",
-        minWidth: 0,
-      }}>
-        {pagina === "dashboard" && <Dashboard condominio={condominio} />}
-        {pagina === "avisos" && <Avisos />}
-        {pagina === "ocorrencias" && <Ocorrencias />}
-        {pagina === "reservas" && <Reservas />}
-        {pagina === "visitantes" && <Visitantes />}
-        {pagina === "documentos" && <Documentos usuarioNome={condominio ? user?.email : "Usuario"} />}
-        {pagina === "financeiro" && <Financeiro />}
-        {pagina === "enquetes" && <Enquetes />}
-        {pagina === "moradores" && <Moradores />}
-        {pagina === "veiculos" && <Veiculos />}
-        {pagina === "pets" && <Pets />}
-        {pagina === "agenda" && <AgendaVisitas />}
-        {pagina === "achados" && <AchadosPerdidos />}
-        {pagina === "telefones" && <TelefonesUteis />}
-      </div>
-    </div>
+              width: "240px", minWidth: "240px", background: "#1e293b", padding: "24px 16px",
+              display: "flex", flexDirection: "column", justifyContent: "space-between",
+              minHeight: "100vh", overflowY: "auto",
+              position: isMobile ? "fixed" : "relative",
+              top: 0, left: 0, zIndex: 1000,
+              transform: isMobile ? (menuAberto ? "translateX(0)" : "translateX(-100%)") : "translateX(0)",
+              transition: "transform 0.3s ease",
+            }}>
+              <div>
+                <h2 style={{ color: "#38bdf8", marginBottom: "8px", fontSize: "1.3rem" }}>CondoFácil</h2>
+                {condominio && <p style={{ color: "#94a3b8", fontSize: "0.8rem", marginBottom: "24px" }}>{condominio.nome}</p>}
+                <nav>
+                  {menuItems
+                    .filter(item => item.perfis.includes(perfil))
+                    .map(item => (
+                      <div
+                        key={item.id}
+                        onClick={() => { setPagina(item.id); if (isMobile) setMenuAberto(false); }}
+                        style={{
+                          padding: "10px 12px", borderRadius: "8px", cursor: "pointer", marginBottom: "4px",
+                          background: pagina === item.id ? "#0f172a" : "transparent",
+                          color: pagina === item.id ? "#38bdf8" : "#cbd5e1",
+                          fontWeight: pagina === item.id ? "bold" : "normal",
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        {item.label}
+                      </div>
+                    ))}
+                </nav>
+              </div>
+              <div>
+                <p style={{ color: "#64748b", fontSize: "0.75rem", marginBottom: "8px" }}>{user.email}</p>
+                <button onClick={logout} style={{ width: "100%", padding: "10px", background: "#ef4444", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer" }}>
+                  Sair
+                </button>
+              </div>
+            </div>
+
+            {/* CONTEÚDO */}
+            <div style={{ flex: 1, padding: isMobile ? "64px 16px 24px" : "24px", overflowY: "auto" }}>
+              {renderPagina()}
+            </div>
+          </div>
+        )
+      } />
+    </Routes>
   );
 }
 
 const styles = {
-  container: {
-    minHeight: "100vh",
-    background: "#0f172a",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "sans-serif",
-  },
-  card: {
-    background: "#1e293b",
-    padding: "40px",
-    borderRadius: "16px",
-    width: "100%",
-    maxWidth: "400px",
-    textAlign: "center",
-    boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-  },
-  titulo: { color: "#38bdf8", fontSize: "2rem", marginBottom: "4px" },
-  subtitulo: { color: "#94a3b8", marginBottom: "24px" },
-  input: {
-    width: "100%",
-    padding: "12px",
-    marginBottom: "12px",
-    borderRadius: "8px",
-    border: "1px solid #334155",
-    background: "#0f172a",
-    color: "#f1f5f9",
-    fontSize: "1rem",
-    boxSizing: "border-box",
-  },
-  botao: {
-    width: "100%",
-    padding: "12px",
-    background: "#38bdf8",
-    color: "#0f172a",
-    border: "none",
-    borderRadius: "8px",
-    fontSize: "1rem",
-    fontWeight: "bold",
-    cursor: "pointer",
-    marginTop: "8px",
-  },
-  erro: { color: "#ef4444", marginBottom: "12px", fontSize: "0.9rem" },
+  container: { display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "#0f172a" },
+  card: { background: "#1e293b", padding: "40px", borderRadius: "16px", width: "100%", maxWidth: "400px", textAlign: "center" },
+  titulo: { color: "#38bdf8", marginBottom: "8px" },
+  subtitulo: { color: "#94a3b8", marginBottom: "24px", fontSize: "0.9rem" },
+  input: { width: "100%", padding: "12px", marginBottom: "12px", borderRadius: "8px", border: "1px solid #334155", background: "#0f172a", color: "#f1f5f9", fontSize: "1rem", boxSizing: "border-box" },
+  botao: { width: "100%", padding: "12px", background: "#38bdf8", color: "#0f172a", border: "none", borderRadius: "8px", fontWeight: "bold", fontSize: "1rem", cursor: "pointer" },
+  erro: { color: "#f87171", marginBottom: "12px", fontSize: "0.85rem" },
 };
