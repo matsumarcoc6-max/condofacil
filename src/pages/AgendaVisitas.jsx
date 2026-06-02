@@ -15,7 +15,7 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import QRCode from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 
 // Props esperadas: perfil (string), user (objeto Firebase Auth)
 export default function AgendaVisitas({ perfil, user }) {
@@ -186,7 +186,7 @@ export default function AgendaVisitas({ perfil, user }) {
             Envie o QR code abaixo para <strong style={{ color: "#f1f5f9" }}>{visitaCriada.nome}</strong>
           </p>
           <div style={{ display: "inline-block", background: "#fff", padding: "16px", borderRadius: "12px", marginBottom: "16px" }}>
-            <QRCode value={visitaCriada.link} size={200} />
+            <QRCodeSVG value={visitaCriada.link} size={200} />
           </div>
           <p style={{ color: "#64748b", fontSize: "0.8rem", marginBottom: "16px", wordBreak: "break-all" }}>
             {visitaCriada.link}
