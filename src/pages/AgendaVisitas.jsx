@@ -64,22 +64,38 @@ export default function AgendaVisitas({ perfil, user }) {
     const dataHoraAgendada = new Date(`${data}T${horario || "00:00"}`);
     const link = `https://condofacil-lemon.vercel.app/v/${uuid}`;
 
-    await addDoc(collection(db, "visitas"), {
-      uuid,
-      nome: nomeVisitante,
-      rg: rg || null,
-      acompanhantes: acompanhantes || null,
-      apartamento,
-      motivo: motivo || null,
-      placa: placa || null,
-      dataHoraAgendada,
-      dataHoraEntrada: null,
-      dataHoraSaida: null,
-      status: "agendado",
-      origem: "agendamento",
-      criadoPor: user?.uid || null,
-      criado_em: serverTimestamp(),
-    });
+    async function agendarVisita() {
+  if (!nomeVisitante || !apartamento || !data) return;
+  setSalvando(true);
+
+  const uuid = crypto.randomUUID();
+  const dataHoraAgendada = new Date(`${data}T${horario || "00:00"}`);
+
+  const docRef = await addDoc(collection(db, "visitas"), {
+    uuid,
+    nome: nomeVisitante,
+    rg: rg || null,
+    acompanhantes: acompanhantes || null,
+    apartamento,
+    motivo: motivo || null,
+    placa: placa || null,
+    dataHoraAgendada,
+    dataHoraEntrada: null,
+    dataHoraSaida: null,
+    status: "agendado",
+    origem: "agendamento",
+    criadoPor: user?.uid || null,
+    criado_em: serverTimestamp(),
+  });
+
+  const link = `https://condofacil-lemon.vercel.app/v/${docRef.id}`;
+  setVisitaCriada({ uuid, link, nome: nomeVisitante, apartamento });
+  setNomeVisitante(""); setRg(""); setAcompanhantes(""); setApartamento("");
+  setMotivo(""); setPlaca(""); setData(""); setHorario("");
+  setSalvando(false);
+  setMostrarFormulario(false);
+  carregarVisitas();
+}
 
     setVisitaCriada({ uuid, link, nome: nomeVisitante, apartamento });
     setNomeVisitante(""); setRg(""); setAcompanhantes(""); setApartamento("");
