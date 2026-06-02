@@ -18,7 +18,7 @@ import AgendaVisitas from "./pages/AgendaVisitas";
 import AchadosPerdidos from "./pages/AchadosPerdidos";
 import TelefonesUteis from "./pages/TelefonesUteis";
 import VisitaPublica from "./pages/VisitaPublica";
-import QrCodePage from "./pages/QrCode";
+{ id: "qrcode", label: "📲 QR Code", perfis: ["admin_geral", "sindico"] },
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -118,7 +118,6 @@ export default function App() {
       case "pets": return <Pets perfil={perfil} />;
       case "achados": return <AchadosPerdidos perfil={perfil} />;
       case "telefones": return <TelefonesUteis perfil={perfil} />;
-      case "qrcode": return <QrCodePage />;
       default: return <Dashboard perfil={perfil} />;
     }
   };
