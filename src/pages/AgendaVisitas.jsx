@@ -1,7 +1,3 @@
-// AgendaVisitas.jsx — Agendamento pelo morador + link QR via WhatsApp
-// Depende da coleção "visitas" no Firestore (compartilhada com Visitantes)
-// Instalar: npm install qrcode.react
-
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import {
@@ -17,7 +13,6 @@ import {
 } from "firebase/firestore";
 import { QRCodeSVG } from "qrcode.react";
 
-// Props esperadas: perfil (string), user (objeto Firebase Auth)
 export default function AgendaVisitas({ perfil, user }) {
   const [visitas, setVisitas] = useState([]);
   const [nomeVisitante, setNomeVisitante] = useState("");
@@ -33,24 +28,14 @@ export default function AgendaVisitas({ perfil, user }) {
   const [filtro, setFiltro] = useState("proximas");
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
-  useEffect(() => {
-    carregarVisitas();
-  }, []);
+  useEffect(() => { carregarVisitas(); }, []);
 
   async function carregarVisitas() {
     let q;
     if (perfil === "morador" && user) {
-      q = query(
-        collection(db, "visitas"),
-        where("criadoPor", "==", user.uid),
-        orderBy("dataHoraAgendada", "desc")
-      );
+      q = query(collection(db, "visitas"), where("criadoPor", "==", user.uid), orderBy("dataHoraAgendada", "desc"));
     } else {
-      q = query(
-        collection(db, "visitas"),
-        where("dataHoraAgendada", "!=", null),
-        orderBy("dataHoraAgendada", "desc")
-      );
+      q = query(collection(db, "visitas"), where("dataHoraAgendada", "!=", null), orderBy("dataHoraAgendada", "desc"));
     }
     const snap = await getDocs(q);
     setVisitas(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
@@ -59,45 +44,26 @@ export default function AgendaVisitas({ perfil, user }) {
   async function agendarVisita() {
     if (!nomeVisitante || !apartamento || !data) return;
     setSalvando(true);
-
     const uuid = crypto.randomUUID();
     const dataHoraAgendada = new Date(`${data}T${horario || "00:00"}`);
-    const link = `https://condofacil-lemon.vercel.app/v/${uuid}`;
-
-    async function agendarVisita() {
-  if (!nomeVisitante || !apartamento || !data) return;
-  setSalvando(true);
-
-  const uuid = crypto.randomUUID();
-  const dataHoraAgendada = new Date(`${data}T${horario || "00:00"}`);
-
-  const docRef = await addDoc(collection(db, "visitas"), {
-    uuid,
-    nome: nomeVisitante,
-    rg: rg || null,
-    acompanhantes: acompanhantes || null,
-    apartamento,
-    motivo: motivo || null,
-    placa: placa || null,
-    dataHoraAgendada,
-    dataHoraEntrada: null,
-    dataHoraSaida: null,
-    status: "agendado",
-    origem: "agendamento",
-    criadoPor: user?.uid || null,
-    criado_em: serverTimestamp(),
-  });
-
-  const link = `https://condofacil-lemon.vercel.app/v/${docRef.id}`;
-  setVisitaCriada({ uuid, link, nome: nomeVisitante, apartamento });
-  setNomeVisitante(""); setRg(""); setAcompanhantes(""); setApartamento("");
-  setMotivo(""); setPlaca(""); setData(""); setHorario("");
-  setSalvando(false);
-  setMostrarFormulario(false);
-  carregarVisitas();
-}
-
-    setVisitaCriada({ uuid, link, nome: nomeVisitante, apartamento });
+    const docRef = await addDoc(collection(db, "visitas"), {
+      uuid,
+      nome: nomeVisitante,
+      rg: rg || null,
+      acompanhantes: acompanhantes || null,
+      apartamento,
+      motivo: motivo || null,
+      placa: placa || null,
+      dataHoraAgendada,
+      dataHoraEntrada: null,
+      dataHoraSaida: null,
+      status: "agendado",
+      origem: "agendamento",
+      criadoPor: user?.uid || null,
+      criado_em: serverTimestamp(),
+    });
+    const link = `https://condofacil-lemon.vercel.app/v/${docRef.id}`;
+    setVisitaCriada({ link, nome: nomeVisitante, apartamento });
     setNomeVisitante(""); setRg(""); setAcompanhantes(""); setApartamento("");
     setMotivo(""); setPlaca(""); setData(""); setHorario("");
     setSalvando(false);
@@ -114,44 +80,20 @@ export default function AgendaVisitas({ perfil, user }) {
   hoje.setHours(0, 0, 0, 0);
 
   const visitasFiltradas = visitas.filter((v) => {
-    const dataVisita = v.dataHoraAgendada?.toDate
-      ? v.dataHoraAgendada.toDate()
-      : v.dataHoraAgendada
-      ? new Date(v.dataHoraAgendada)
-      : null;
-
-    if (filtro === "proximas") {
-      return dataVisita && dataVisita >= hoje && v.status === "agendado";
-    }
-    if (filtro === "historico") {
-      return v.status === "finalizado" || v.status === "cancelado" || v.status === "expirado" ||
-        (dataVisita && dataVisita < hoje);
-    }
+    const dataVisita = v.dataHoraAgendada?.toDate ? v.dataHoraAgendada.toDate() : v.dataHoraAgendada ? new Date(v.dataHoraAgendada) : null;
+    if (filtro === "proximas") return dataVisita && dataVisita >= hoje && v.status === "agendado";
+    if (filtro === "historico") return v.status === "finalizado" || v.status === "cancelado" || v.status === "expirado" || (dataVisita && dataVisita < hoje);
     return true;
   });
 
   function formatarDataHora(campo) {
     if (!campo) return "—";
     const d = campo.toDate ? campo.toDate() : new Date(campo);
-    return d.toLocaleDateString("pt-BR") + " às " +
-      d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
   }
 
-  const corStatus = {
-    agendado: "#f59e0b",
-    dentro: "#22c55e",
-    finalizado: "#475569",
-    cancelado: "#ef4444",
-    expirado: "#64748b",
-  };
-
-  const labelStatus = {
-    agendado: "Agendado",
-    dentro: "Dentro",
-    finalizado: "Realizada",
-    cancelado: "Cancelada",
-    expirado: "Expirada",
-  };
+  const corStatus = { agendado: "#f59e0b", dentro: "#22c55e", finalizado: "#475569", cancelado: "#ef4444", expirado: "#64748b" };
+  const labelStatus = { agendado: "Agendado", dentro: "Dentro", finalizado: "Realizada", cancelado: "Cancelada", expirado: "Expirada" };
 
   function enviarWhatsApp(link, nome, apartamento, dataHora) {
     const texto = encodeURIComponent(
@@ -167,9 +109,7 @@ export default function AgendaVisitas({ perfil, user }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
         <h2 style={{ color: "#38bdf8", margin: 0 }}>Agenda de Visitas</h2>
         {(perfil === "morador" || perfil === "sindico" || perfil === "admin_geral") && (
-          <button style={btnAzul} onClick={() => { setMostrarFormulario(!mostrarFormulario); setVisitaCriada(null); }}>
-            + Nova visita
-          </button>
+          <button style={btnAzul} onClick={() => { setMostrarFormulario(!mostrarFormulario); setVisitaCriada(null); }}>+ Nova visita</button>
         )}
       </div>
 
@@ -187,9 +127,7 @@ export default function AgendaVisitas({ perfil, user }) {
             <input style={{ ...inp, flex: 1 }} type="time" value={horario} onChange={(e) => setHorario(e.target.value)} />
           </div>
           <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
-            <button style={btnAzul} onClick={agendarVisita} disabled={salvando}>
-              {salvando ? "Agendando..." : "Salvar e gerar QR"}
-            </button>
+            <button style={btnAzul} onClick={agendarVisita} disabled={salvando}>{salvando ? "Agendando..." : "Salvar e gerar QR"}</button>
             <button style={btnSecundario} onClick={() => setMostrarFormulario(false)}>Cancelar</button>
           </div>
         </div>
@@ -204,50 +142,29 @@ export default function AgendaVisitas({ perfil, user }) {
           <div style={{ display: "inline-block", background: "#fff", padding: "16px", borderRadius: "12px", marginBottom: "16px" }}>
             <QRCodeSVG value={visitaCriada.link} size={200} />
           </div>
-          <p style={{ color: "#64748b", fontSize: "0.8rem", marginBottom: "16px", wordBreak: "break-all" }}>
-            {visitaCriada.link}
-          </p>
+          <p style={{ color: "#64748b", fontSize: "0.8rem", marginBottom: "16px", wordBreak: "break-all" }}>{visitaCriada.link}</p>
           <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
-            <button style={btnVerde} onClick={() => enviarWhatsApp(visitaCriada.link, visitaCriada.nome, visitaCriada.apartamento, null)}>
-              📲 Enviar via WhatsApp
-            </button>
-            <button style={btnSecundario} onClick={() => { navigator.clipboard.writeText(visitaCriada.link); }}>
-              📋 Copiar link
-            </button>
-            <button style={btnSecundario} onClick={() => setVisitaCriada(null)}>
-              Fechar
-            </button>
+            <button style={btnVerde} onClick={() => enviarWhatsApp(visitaCriada.link, visitaCriada.nome, visitaCriada.apartamento, null)}>📲 Enviar via WhatsApp</button>
+            <button style={btnSecundario} onClick={() => navigator.clipboard.writeText(visitaCriada.link)}>📋 Copiar link</button>
+            <button style={btnSecundario} onClick={() => setVisitaCriada(null)}>Fechar</button>
           </div>
         </div>
       )}
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
         {["proximas", "historico", "todas"].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFiltro(f)}
-            style={{
-              padding: "6px 16px", borderRadius: "8px", border: "none", cursor: "pointer",
-              fontWeight: "bold", fontSize: "0.85rem",
-              background: filtro === f ? "#38bdf8" : "#1e293b",
-              color: filtro === f ? "#0f172a" : "#94a3b8",
-            }}
-          >
+          <button key={f} onClick={() => setFiltro(f)} style={{ padding: "6px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "0.85rem", background: filtro === f ? "#38bdf8" : "#1e293b", color: filtro === f ? "#0f172a" : "#94a3b8" }}>
             {f === "proximas" ? "Próximas" : f === "historico" ? "Histórico" : "Todas"}
           </button>
         ))}
       </div>
 
-      <p style={{ color: "#64748b", fontSize: "0.85rem", marginBottom: "12px" }}>
-        {visitasFiltradas.length} visita{visitasFiltradas.length !== 1 ? "s" : ""}
-      </p>
+      <p style={{ color: "#64748b", fontSize: "0.85rem", marginBottom: "12px" }}>{visitasFiltradas.length} visita{visitasFiltradas.length !== 1 ? "s" : ""}</p>
 
-      {visitasFiltradas.length === 0 && (
-        <p style={{ color: "#64748b", textAlign: "center", marginTop: "32px" }}>Nenhuma visita encontrada.</p>
-      )}
+      {visitasFiltradas.length === 0 && <p style={{ color: "#64748b", textAlign: "center", marginTop: "32px" }}>Nenhuma visita encontrada.</p>}
 
       {visitasFiltradas.map((v) => {
-        const link = v.uuid ? `https://condofacil-lemon.vercel.app/v/${v.uuid}` : null;
+        const link = v.id ? `https://condofacil-lemon.vercel.app/v/${v.id}` : null;
         return (
           <div key={v.id} style={{ background: "#1e293b", padding: "20px", borderRadius: "12px", marginBottom: "12px", borderLeft: `4px solid ${corStatus[v.status] || "#38bdf8"}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
@@ -265,12 +182,8 @@ export default function AgendaVisitas({ perfil, user }) {
             </div>
             {v.status === "agendado" && link && (
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "8px" }}>
-                <button style={btnPequeno} onClick={() => enviarWhatsApp(link, v.nome, v.apartamento, formatarDataHora(v.dataHoraAgendada))}>
-                  📲 Enviar link
-                </button>
-                <button style={{ ...btnPequeno, color: "#ef4444", borderColor: "#ef4444" }} onClick={() => cancelarVisita(v.id)}>
-                  Cancelar
-                </button>
+                <button style={btnPequeno} onClick={() => enviarWhatsApp(link, v.nome, v.apartamento, formatarDataHora(v.dataHoraAgendada))}>📲 Enviar link</button>
+                <button style={{ ...btnPequeno, color: "#ef4444", borderColor: "#ef4444" }} onClick={() => cancelarVisita(v.id)}>Cancelar</button>
               </div>
             )}
           </div>
