@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { auth, db } from "./firebase";
 import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, updateDoc } from "firebase/firestore";
 import { Routes, Route } from "react-router-dom";
 import Avisos from "./pages/Avisos";
 import Ocorrencias from "./pages/Ocorrencias";
@@ -66,33 +66,44 @@ export default function App() {
   }
 
   async function carregarCondominio(uid) {
-  const snap = await getDocs(collection(db, "condominios"));
-  if (!snap.empty) {
-    setCondominio(snap.docs[0].data());
-  }
-  const perfilDoc = await getDoc(doc(db, "usuarios", uid));
-  if (perfilDoc.exists()) {
-    setPerfil(perfilDoc.data().perfil);
-  }
-
-  // Salva token FCM
-  try {
-    const { solicitarPermissaoNotificacao } = await import("./firebase");
-    const token = await solicitarPermissaoNotificacao();
-    if (token) {
-      const { updateDoc, doc: firestoreDoc } = await import("firebase/firestore");
-      await updateDoc(firestoreDoc(db, "usuarios", uid), { fcmToken: token });
+    const snap = await getDocs(collection(db, "condominios"));
+    if (!snap.empty) {
+      setCondominio(snap.docs[0].data());
     }
-  } catch (e) {
-    console.error("Erro FCM:", e);
+    const perfilDoc = await getDoc(doc(db, "usuarios", uid));
+    if (perfilDoc.exists()) {
+      setPerfil(perfilDoc.data().perfil);
+    }
+    try {
+      const { solicitarPermissaoNotificacao } = await import("./firebase");
+      const token = await solicitarPermissaoNotificacao();
+      if (token) {
+        await updateDoc(doc(db, "usuarios", uid), { fcmToken: token });
+      }
+    } catch (e) {
+      console.error("Erro FCM:", e);
+    }
   }
-}
 
   async function logout() {
     await signOut(auth);
     setUser(null);
     setCondominio(null);
     setPerfil(null);
+  }
+
+  async function ativarNotificacoes() {
+    if (!user) return;
+    try {
+      const { solicitarPermissaoNotificacao } = await import("./firebase");
+      const token = await solicitarPermissaoNotificacao();
+      if (token) {
+        await updateDoc(doc(db, "usuarios", user.uid), { fcmToken: token });
+        alert("Notificações ativadas!");
+      }
+    } catch (e) {
+      console.error("Erro FCM:", e);
+    }
   }
 
   const menuItems = [
@@ -133,36 +144,19 @@ export default function App() {
     }
   };
 
-  // Rota pública — acessível sem login
   return (
     <Routes>
       <Route path="/v/:id" element={<VisitaPublica />} />
       <Route path="*" element={
         !user ? (
-          // ===== TELA DE LOGIN =====
           <div style={styles.container}>
             <div style={styles.card}>
               <h1 style={styles.titulo}>CondoFácil</h1>
               <p style={styles.subtitulo}>Acesse sua conta</p>
-              <input
-                style={styles.input}
-                type="email"
-                placeholder="E-mail"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <input style={styles.input} type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
               <div style={{ position: "relative", marginBottom: "12px" }}>
-                <input
-                  style={{ ...styles.input, marginBottom: 0 }}
-                  type={mostrarSenha ? "text" : "password"}
-                  placeholder="Senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <span
-                  onClick={() => setMostrarSenha(!mostrarSenha)}
-                  style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "#64748b", fontSize: "1.1rem" }}
-                >
+                <input style={{ ...styles.input, marginBottom: 0 }} type={mostrarSenha ? "text" : "password"} placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <span onClick={() => setMostrarSenha(!mostrarSenha)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "#64748b", fontSize: "1.1rem" }}>
                   {mostrarSenha ? "🙈" : "👁️"}
                 </span>
               </div>
@@ -170,32 +164,30 @@ export default function App() {
               {!esqueceuSenha ? (
                 <>
                   <button style={styles.botao} onClick={login}>Entrar</button>
-                  <p onClick={() => { setEsqueceuSenha(true); setErro(""); }} style={{ color: "#38bdf8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}>
-                    Esqueci minha senha
-                  </p>
+                  <p onClick={() => { setEsqueceuSenha(true); setErro(""); }} style={{ color: "#38bdf8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}>Esqueci minha senha</p>
                 </>
               ) : (
                 <>
                   <input style={styles.input} type="email" placeholder="Digite seu e-mail" value={emailRecuperacao} onChange={(e) => setEmailRecuperacao(e.target.value)} />
                   {mensagemRecuperacao && <p style={{ color: "#22c55e", fontSize: "0.85rem", marginBottom: "8px" }}>{mensagemRecuperacao}</p>}
                   <button style={styles.botao} onClick={recuperarSenha}>Enviar e-mail de recuperação</button>
-                  <p onClick={() => { setEsqueceuSenha(false); setMensagemRecuperacao(""); }} style={{ color: "#94a3b8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}>
-                    Voltar ao login
-                  </p>
+                  <p onClick={() => { setEsqueceuSenha(false); setMensagemRecuperacao(""); }} style={{ color: "#94a3b8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}>Voltar ao login</p>
                 </>
               )}
             </div>
           </div>
         ) : (
-          // ===== APP PRINCIPAL =====
           <div style={{ display: "flex", minHeight: "100vh", background: "#0f172a", fontFamily: "sans-serif" }}>
 
             {isMobile && (
-              <button
-                onClick={() => setMenuAberto(!menuAberto)}
-                style={{ position: "fixed", top: "12px", left: "12px", zIndex: 1001, background: "#1e293b", border: "none", color: "#38bdf8", fontSize: "24px", width: "44px", height: "44px", borderRadius: "8px", cursor: "pointer" }}
-              >
+              <button onClick={() => setMenuAberto(!menuAberto)} style={{ position: "fixed", top: "12px", left: "12px", zIndex: 1001, background: "#1e293b", border: "none", color: "#38bdf8", fontSize: "24px", width: "44px", height: "44px", borderRadius: "8px", cursor: "pointer" }}>
                 ☰
+              </button>
+            )}
+
+            {isMobile && (
+              <button onClick={ativarNotificacoes} style={{ position: "fixed", top: "12px", right: "12px", zIndex: 1001, background: "#22c55e", border: "none", color: "#fff", fontSize: "20px", width: "44px", height: "44px", borderRadius: "8px", cursor: "pointer" }}>
+                🔔
               </button>
             )}
 
@@ -203,48 +195,24 @@ export default function App() {
               <div onClick={() => setMenuAberto(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999 }} />
             )}
 
-            {/* SIDEBAR */}
-            <div style={{
-              width: "240px", minWidth: "240px", background: "#1e293b", padding: "24px 16px",
-              display: "flex", flexDirection: "column", justifyContent: "space-between",
-              minHeight: "100vh", overflowY: "auto",
-              position: isMobile ? "fixed" : "relative",
-              top: 0, left: 0, zIndex: 1000,
-              transform: isMobile ? (menuAberto ? "translateX(0)" : "translateX(-100%)") : "translateX(0)",
-              transition: "transform 0.3s ease",
-            }}>
+            <div style={{ width: "240px", minWidth: "240px", background: "#1e293b", padding: "24px 16px", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: "100vh", overflowY: "auto", position: isMobile ? "fixed" : "relative", top: 0, left: 0, zIndex: 1000, transform: isMobile ? (menuAberto ? "translateX(0)" : "translateX(-100%)") : "translateX(0)", transition: "transform 0.3s ease" }}>
               <div>
                 <h2 style={{ color: "#38bdf8", marginBottom: "8px", fontSize: "1.3rem" }}>CondoFácil</h2>
                 {condominio && <p style={{ color: "#94a3b8", fontSize: "0.8rem", marginBottom: "24px" }}>{condominio.nome}</p>}
                 <nav>
-                  {menuItems
-                    .filter(item => item.perfis.includes(perfil))
-                    .map(item => (
-                      <div
-                        key={item.id}
-                        onClick={() => { setPagina(item.id); if (isMobile) setMenuAberto(false); }}
-                        style={{
-                          padding: "10px 12px", borderRadius: "8px", cursor: "pointer", marginBottom: "4px",
-                          background: pagina === item.id ? "#0f172a" : "transparent",
-                          color: pagina === item.id ? "#38bdf8" : "#cbd5e1",
-                          fontWeight: pagina === item.id ? "bold" : "normal",
-                          fontSize: "0.9rem",
-                        }}
-                      >
-                        {item.label}
-                      </div>
-                    ))}
+                  {menuItems.filter(item => item.perfis.includes(perfil)).map(item => (
+                    <div key={item.id} onClick={() => { setPagina(item.id); if (isMobile) setMenuAberto(false); }} style={{ padding: "10px 12px", borderRadius: "8px", cursor: "pointer", marginBottom: "4px", background: pagina === item.id ? "#0f172a" : "transparent", color: pagina === item.id ? "#38bdf8" : "#cbd5e1", fontWeight: pagina === item.id ? "bold" : "normal", fontSize: "0.9rem" }}>
+                      {item.label}
+                    </div>
+                  ))}
                 </nav>
               </div>
               <div>
                 <p style={{ color: "#64748b", fontSize: "0.75rem", marginBottom: "8px" }}>{user.email}</p>
-                <button onClick={logout} style={{ width: "100%", padding: "10px", background: "#ef4444", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer" }}>
-                  Sair
-                </button>
+                <button onClick={logout} style={{ width: "100%", padding: "10px", background: "#ef4444", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer" }}>Sair</button>
               </div>
             </div>
 
-            {/* CONTEÚDO */}
             <div style={{ flex: 1, padding: isMobile ? "64px 16px 24px" : "24px", overflowY: "auto" }}>
               {renderPagina()}
             </div>
