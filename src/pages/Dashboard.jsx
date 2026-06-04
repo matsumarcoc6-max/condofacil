@@ -37,7 +37,7 @@ export default function Dashboard({ condominio }) {
         getDocs(collection(db, "pets")),
         getDocs(query(collection(db, "enquetes"), where("ativa", "==", true))),
         getDocs(query(collection(db, "visitas"), where("dataHoraAgendada", "!=", null))),
-        getDocs(collection(db, "moradores")),
+        getDocs(collection(db, "usuarios")),
         getDocs(collection(db, "achados_perdidos")),
         getDocs(query(collection(db, "visitas"), where("status", "==", "dentro"))),
       ]);
