@@ -7,6 +7,8 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
   PieChart, Pie, Cell,
 } from "recharts";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function Financeiro() {
   const [lancamentos, setLancamentos] = useState([]);
@@ -51,7 +53,6 @@ export default function Financeiro() {
     return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   }
 
-  // Gráfico mensal
   const meses = [];
   const agora = new Date();
   for (let i = 5; i >= 0; i--) {
@@ -67,7 +68,6 @@ export default function Financeiro() {
     if (l.tipo === "despesa") entry.despesas += l.valor;
   });
 
-  // Gráfico pizza por categoria (despesas)
   const porCategoria = {};
   lancamentos.filter((l) => l.tipo === "despesa").forEach((l) => {
     porCategoria[l.categoria] = (porCategoria[l.categoria] || 0) + l.valor;
@@ -75,12 +75,39 @@ export default function Financeiro() {
   const dadosPizza = Object.entries(porCategoria).map(([name, value]) => ({ name, value }));
 
   const CORES = ["#38bdf8", "#22c55e", "#f59e0b", "#a78bfa", "#ef4444", "#ec4899", "#06b6d4"];
-
   const tooltipStyle = { contentStyle: { background: "#0f172a", border: "1px solid #334155", borderRadius: "8px" }, labelStyle: { color: "#f1f5f9" } };
+
+  function exportarPDF() {
+    const pdf = new jsPDF();
+    pdf.setFontSize(16);
+    pdf.text("Relatório Financeiro — CondoFácil", 14, 20);
+    pdf.setFontSize(11);
+    pdf.text(`Receitas: ${formatarMoeda(totalReceitas)}`, 14, 32);
+    pdf.text(`Despesas: ${formatarMoeda(totalDespesas)}`, 14, 40);
+    pdf.text(`Saldo: ${formatarMoeda(saldo)}`, 14, 48);
+    autoTable(pdf, {
+      startY: 58,
+      head: [["Descrição", "Categoria", "Tipo", "Valor", "Data"]],
+      body: lancamentos.map((l) => [
+        l.descricao,
+        l.categoria,
+        l.tipo === "receita" ? "Receita" : "Despesa",
+        (l.tipo === "receita" ? "+" : "-") + formatarMoeda(l.valor),
+        l.criado_em?.toDate().toLocaleDateString("pt-BR") || "—",
+      ]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [56, 189, 248] },
+      alternateRowStyles: { fillColor: [240, 240, 240] },
+    });
+    pdf.save("financeiro-condofacil.pdf");
+  }
 
   return (
     <div style={{ padding: "24px" }}>
-      <h2 style={{ color: "#38bdf8", marginBottom: "20px" }}>Financeiro</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+        <h2 style={{ color: "#38bdf8", margin: 0 }}>Financeiro</h2>
+        <button style={btn} onClick={exportarPDF}>⬇️ Exportar PDF</button>
+      </div>
 
       {/* Resumo */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "24px" }}>
@@ -113,7 +140,7 @@ export default function Financeiro() {
         </ResponsiveContainer>
       </div>
 
-      {/* Gráfico pizza despesas por categoria */}
+      {/* Gráfico pizza */}
       {dadosPizza.length > 0 && (
         <div style={{ background: "#1e293b", borderRadius: "12px", padding: "24px", marginBottom: "24px" }}>
           <h3 style={{ color: "#f1f5f9", margin: "0 0 20px" }}>Despesas por categoria</h3>
