@@ -66,15 +66,27 @@ export default function App() {
   }
 
   async function carregarCondominio(uid) {
-    const snap = await getDocs(collection(db, "condominios"));
-    if (!snap.empty) {
-      setCondominio(snap.docs[0].data());
-    }
-    const perfilDoc = await getDoc(doc(db, "usuarios", uid));
-    if (perfilDoc.exists()) {
-      setPerfil(perfilDoc.data().perfil);
-    }
+  const snap = await getDocs(collection(db, "condominios"));
+  if (!snap.empty) {
+    setCondominio(snap.docs[0].data());
   }
+  const perfilDoc = await getDoc(doc(db, "usuarios", uid));
+  if (perfilDoc.exists()) {
+    setPerfil(perfilDoc.data().perfil);
+  }
+
+  // Salva token FCM
+  try {
+    const { solicitarPermissaoNotificacao } = await import("./firebase");
+    const token = await solicitarPermissaoNotificacao();
+    if (token) {
+      const { updateDoc, doc: firestoreDoc } = await import("firebase/firestore");
+      await updateDoc(firestoreDoc(db, "usuarios", uid), { fcmToken: token });
+    }
+  } catch (e) {
+    console.error("Erro FCM:", e);
+  }
+}
 
   async function logout() {
     await signOut(auth);
