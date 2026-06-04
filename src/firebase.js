@@ -23,15 +23,21 @@ export const messaging = getMessaging(app);
 export async function solicitarPermissaoNotificacao() {
   try {
     const permission = await Notification.requestPermission();
+    console.log("Permissão:", permission);
     if (permission !== "granted") return null;
+
+    const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+    console.log("SW registrado:", registration);
 
     const token = await getToken(messaging, {
       vapidKey: "BJYM5NxjqkIHNm9aXcb4FjHTutbLpCKnPBma5kjKhRzYLY1ABKPnCLaO6kmPtIzqXfcO1Y7ZRRlJCu49wRkM4WY",
+      serviceWorkerRegistration: registration,
     });
 
+    console.log("Token FCM:", token);
     return token;
   } catch (err) {
-    console.error("Erro ao obter token FCM:", err);
+    console.error("Erro FCM:", err);
     return null;
   }
 }
