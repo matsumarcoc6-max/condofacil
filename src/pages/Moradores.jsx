@@ -3,7 +3,7 @@ import { db, auth } from "../firebase";
 import { collection, getDocs, orderBy, query, serverTimestamp, setDoc, doc } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 
-export default function Moradores() {
+export default function Moradores({ perfil: perfilLogado }) {
   const [moradores, setMoradores] = useState([]);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -114,7 +114,7 @@ export default function Moradores() {
         <select style={inp} value={perfil} onChange={(e) => setPerfil(e.target.value)}>
           <option value="morador">Morador</option>
           <option value="porteiro">Porteiro</option>
-          <option value="sindico">Sindico</option>
+          {perfilLogado === "admin_geral" && <option value="sindico">Sindico</option>}
         </select>
         {erro && <p style={{ color: "#ef4444", fontSize: "0.9rem", marginBottom: "8px" }}>{erro}</p>}
         {sucesso && <p style={{ color: "#22c55e", fontSize: "0.9rem", marginBottom: "8px" }}>{sucesso}</p>}
