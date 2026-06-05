@@ -125,7 +125,6 @@ export default function App() {
     { id: "pets", label: "🐾 Animais", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "achados", label: "🔍 Achados e Perdidos", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
     { id: "telefones", label: "📞 Telefones Úteis", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
-    { id: "qrcode", label: "📲 QR Code", perfis: ["admin_geral", "sindico"] },
   ];
 
   const renderPagina = () => {
@@ -189,11 +188,7 @@ export default function App() {
               </button>
             )}
 
-            {isMobile && (
-              <button onClick={ativarNotificacoes} style={{ position: "fixed", top: "12px", right: "12px", zIndex: 1001, background: "#22c55e", border: "none", color: "#fff", fontSize: "20px", width: "44px", height: "44px", borderRadius: "8px", cursor: "pointer" }}>
-                🔔
-              </button>
-            )}
+          
 
             {isMobile && menuAberto && (
               <div onClick={() => setMenuAberto(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999 }} />
