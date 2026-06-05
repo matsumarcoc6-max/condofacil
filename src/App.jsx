@@ -159,7 +159,7 @@ export default function App() {
               <p style={styles.subtitulo}>Acesse sua conta</p>
               <input style={styles.input} type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
               <div style={{ position: "relative", marginBottom: "12px" }}>
-                <input style={{ ...styles.input, marginBottom: 0 }} type={mostrarSenha ? "text" : "password"} placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <input style={{ ...styles.input, marginBottom: 0 }} type={mostrarSenha ? "text" : "password"} placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") login(); }}/>
                 <span onClick={() => setMostrarSenha(!mostrarSenha)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "#64748b", fontSize: "1.1rem" }}>
                   {mostrarSenha ? "🙈" : "👁️"}
                 </span>
