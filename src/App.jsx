@@ -34,13 +34,17 @@ export default function App() {
   const [menuAberto, setMenuAberto] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    const verificar = () => setIsMobile(window.innerWidth <= 768);
-    verificar();
-    window.addEventListener("resize", verificar);
-    return () => window.removeEventListener("resize", verificar);
-  }, []);
+ useEffect(() => {
+  const verificar = () => setIsMobile(window.innerWidth <= 768);
+  verificar();
+  window.addEventListener("resize", verificar);
 
+  import("./firebase").then(({ configurarNotificacaoForeground }) => {
+    configurarNotificacaoForeground();
+  });
+
+  return () => window.removeEventListener("resize", verificar);
+}, []);
   async function recuperarSenha() {
     if (!emailRecuperacao) {
       setMensagemRecuperacao("Digite seu e-mail para recuperar a senha.");

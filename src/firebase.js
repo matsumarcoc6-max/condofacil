@@ -43,3 +43,11 @@ export async function solicitarPermissaoNotificacao() {
 }
 
 export { onMessage };
+export function configurarNotificacaoForeground() {
+  onMessage(messaging, (payload) => {
+    const { title, body } = payload.notification;
+    if (Notification.permission === "granted") {
+      new Notification(title, { body, icon: "/vite.svg" });
+    }
+  });
+}
