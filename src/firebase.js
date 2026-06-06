@@ -30,7 +30,7 @@ export async function solicitarPermissaoNotificacao() {
     console.log("SW registrado:", registration);
 
     const token = await getToken(messaging, {
-      vapidKey: "BE-eN8mneDwdTlz6YvzLcdmLNM5gYn-XdJNWqzMfdbQTeQ75uUAPVL3QuJzyMtpQLXd6uYV6KzuRjRT1KfrBaHo",
+     vapidKey: import.meta.env.VITE_VAPID_KEY,
       serviceWorkerRegistration: registration,
     });
 

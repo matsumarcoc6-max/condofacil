@@ -18,6 +18,7 @@ import AgendaVisitas from "./pages/AgendaVisitas";
 import AchadosPerdidos from "./pages/AchadosPerdidos";
 import TelefonesUteis from "./pages/TelefonesUteis";
 import VisitaPublica from "./pages/VisitaPublica";
+import BannerInstalarIOS from "./components/BannerInstalarIOS";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -189,7 +190,7 @@ export default function App() {
             )}
 
           
-
+            <BannerInstalarIOS />
             {isMobile && menuAberto && (
               <div onClick={() => setMenuAberto(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999 }} />
             )}
