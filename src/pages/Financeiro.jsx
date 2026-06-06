@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 export default function Financeiro() {
   const [lancamentos, setLancamentos] = useState([]);
@@ -131,12 +132,40 @@ export default function Financeiro() {
     });
     pdf.save(`financeiro-${nomeMeses[filtroMes].toLowerCase()}-${filtroAno}.pdf`);
   }
+  function exportarExcel() {
+    if (lancamentosFiltrados.length === 0) {
+      alert("Nenhum lançamento no período selecionado.");
+      return;
+    }
+    const periodo = `${nomeMeses[filtroMes]}_${filtroAno}`;
+    const dados = lancamentosFiltrados.map((l) => ({
+      Descrição: l.descricao,
+      Categoria: l.categoria,
+      Tipo: l.tipo === "receita" ? "Receita" : "Despesa",
+      Valor: l.tipo === "receita" ? l.valor : -l.valor,
+      Data: l.criado_em?.toDate().toLocaleDateString("pt-BR") || "—",
+    }));
+
+    // Linha de totais
+    dados.push({});
+    dados.push({ Descrição: "TOTAL RECEITAS", Valor: receitasPeriodo });
+    dados.push({ Descrição: "TOTAL DESPESAS", Valor: -despesasPeriodo });
+    dados.push({ Descrição: "SALDO", Valor: saldoPeriodo });
+
+    const ws = XLSX.utils.json_to_sheet(dados);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Financeiro");
+    XLSX.writeFile(wb, `financeiro-${periodo}.xlsx`);
+  }
 
   return (
     <div style={{ padding: "24px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
         <h2 style={{ color: "#38bdf8", margin: 0 }}>Financeiro</h2>
-        <button style={btn} onClick={exportarPDF}>⬇️ Exportar PDF</button>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          <button style={btn} onClick={exportarPDF}>⬇️ Exportar PDF</button>
+          <button style={{ ...btn, background: "#22c55e" }} onClick={exportarExcel}>📊 Exportar Excel</button>
+        </div>
       </div>
 
       {/* Resumo */}
