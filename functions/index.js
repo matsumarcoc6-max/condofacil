@@ -1,4 +1,4 @@
-const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { initializeApp } = require("firebase-admin/app");
 const { getMessaging } = require("firebase-admin/messaging");
 const { getFirestore } = require("firebase-admin/firestore");
@@ -39,6 +39,40 @@ exports.notificarMoradorVisita = onDocumentUpdated(
       notification: { title: titulo, body: corpo },
       data: { visitaId: event.params.visitaId },
     });
+
+    return null;
+  }
+);
+
+exports.notificarNovaEnquete = onDocumentCreated(
+  "enquetes/{enqueteId}",
+  async (event) => {
+    const enquete = event.data.data();
+    if (!enquete) return null;
+
+    const db = getFirestore();
+
+    // Busca todos os usuários com fcmToken
+    const snap = await db.collection("usuarios").get();
+    const tokens = snap.docs
+      .map((d) => d.data().fcmToken)
+      .filter(Boolean);
+
+    if (tokens.length === 0) return null;
+
+    // Dispara em lotes de 500 (limite do FCM)
+    const loteSize = 500;
+    for (let i = 0; i < tokens.length; i += loteSize) {
+      const lote = tokens.slice(i, i + loteSize);
+      await getMessaging().sendEachForMulticast({
+        tokens: lote,
+        notification: {
+          title: "Nova enquete disponível 📊",
+          body: enquete.pergunta,
+        },
+        data: { enqueteId: event.params.enqueteId },
+      });
+    }
 
     return null;
   }
