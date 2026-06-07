@@ -23,6 +23,8 @@ export default function AgendaVisitas({ perfil, user }) {
   const [placa, setPlaca] = useState("");
   const [data, setData] = useState("");
   const [horario, setHorario] = useState("");
+  const [visitaProlongada, setVisitaProlongada] = useState(false);
+  const [dataSaidaPrevista, setDataSaidaPrevista] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [visitaCriada, setVisitaCriada] = useState(null);
   const [filtro, setFiltro] = useState("proximas");
@@ -43,6 +45,7 @@ export default function AgendaVisitas({ perfil, user }) {
 
   async function agendarVisita() {
     if (!nomeVisitante || !apartamento || !data) return;
+    if (visitaProlongada && !dataSaidaPrevista) return;
     setSalvando(true);
     const uuid = crypto.randomUUID();
     const dataHoraAgendada = new Date(`${data}T${horario || "00:00"}`);
@@ -57,6 +60,8 @@ export default function AgendaVisitas({ perfil, user }) {
       dataHoraAgendada,
       dataHoraEntrada: null,
       dataHoraSaida: null,
+      visitaProlongada: visitaProlongada,
+      dataSaidaPrevista: visitaProlongada ? new Date(`${dataSaidaPrevista}T23:59`) : null,
       status: "agendado",
       origem: "agendamento",
       criadoPor: user?.uid || null,
@@ -66,6 +71,7 @@ export default function AgendaVisitas({ perfil, user }) {
     setVisitaCriada({ link, nome: nomeVisitante, apartamento });
     setNomeVisitante(""); setRg(""); setAcompanhantes(""); setApartamento("");
     setMotivo(""); setPlaca(""); setData(""); setHorario("");
+    setVisitaProlongada(false); setDataSaidaPrevista("");
     setSalvando(false);
     setMostrarFormulario(false);
     carregarVisitas();
@@ -90,6 +96,12 @@ export default function AgendaVisitas({ perfil, user }) {
     if (!campo) return "—";
     const d = campo.toDate ? campo.toDate() : new Date(campo);
     return d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function formatarData(campo) {
+    if (!campo) return "—";
+    const d = campo.toDate ? campo.toDate() : new Date(campo);
+    return d.toLocaleDateString("pt-BR");
   }
 
   const corStatus = { agendado: "#f59e0b", dentro: "#22c55e", finalizado: "#475569", cancelado: "#ef4444", expirado: "#64748b" };
@@ -126,6 +138,34 @@ export default function AgendaVisitas({ perfil, user }) {
             <input style={{ ...inp, flex: 1 }} type="date" value={data} onChange={(e) => setData(e.target.value)} />
             <input style={{ ...inp, flex: 1 }} type="time" value={horario} onChange={(e) => setHorario(e.target.value)} />
           </div>
+
+          {/* Visita prolongada */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px", padding: "12px", background: "#0f172a", borderRadius: "8px", border: "1px solid #334155" }}>
+            <input
+              type="checkbox"
+              id="prolongada"
+              checked={visitaProlongada}
+              onChange={(e) => { setVisitaProlongada(e.target.checked); setDataSaidaPrevista(""); }}
+              style={{ width: "18px", height: "18px", cursor: "pointer" }}
+            />
+            <label htmlFor="prolongada" style={{ color: "#f1f5f9", fontSize: "0.95rem", cursor: "pointer" }}>
+              Visita prolongada (parente, hóspede, prestador por vários dias)
+            </label>
+          </div>
+
+          {visitaProlongada && (
+            <div>
+              <p style={{ color: "#64748b", fontSize: "0.85rem", marginBottom: "6px" }}>Data de saída prevista *</p>
+              <input
+                style={inp}
+                type="date"
+                value={dataSaidaPrevista}
+                min={data || undefined}
+                onChange={(e) => setDataSaidaPrevista(e.target.value)}
+              />
+            </div>
+          )}
+
           <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
             <button style={btnAzul} onClick={agendarVisita} disabled={salvando}>{salvando ? "Agendando..." : "Salvar e gerar QR"}</button>
             <button style={btnSecundario} onClick={() => setMostrarFormulario(false)}>Cancelar</button>
@@ -169,12 +209,22 @@ export default function AgendaVisitas({ perfil, user }) {
           <div key={v.id} style={{ background: "#1e293b", padding: "20px", borderRadius: "12px", marginBottom: "12px", borderLeft: `4px solid ${corStatus[v.status] || "#38bdf8"}` }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
               <div>
-                <h4 style={{ color: "#f1f5f9", margin: "0 0 4px" }}>{v.nome}</h4>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                  <h4 style={{ color: "#f1f5f9", margin: 0 }}>{v.nome}</h4>
+                  {v.visitaProlongada && (
+                    <span style={{ background: "#a78bfa22", color: "#a78bfa", padding: "2px 8px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "bold" }}>
+                      🏠 Prolongada
+                    </span>
+                  )}
+                </div>
                 <p style={infoStyle}>Apto {v.apartamento}{v.motivo ? ` — ${v.motivo}` : ""}</p>
-                {v.dataHoraAgendada && <p style={infoStyle}>📅 {formatarDataHora(v.dataHoraAgendada)}</p>}
+                {v.dataHoraAgendada && <p style={infoStyle}>📅 Entrada: {formatarDataHora(v.dataHoraAgendada)}</p>}
+                {v.visitaProlongada && v.dataSaidaPrevista && (
+                  <p style={{ ...infoStyle, color: "#a78bfa" }}>🗓️ Saída prevista: {formatarData(v.dataSaidaPrevista)}</p>
+                )}
                 {v.placa && <p style={infoStyle}>🚗 {v.placa}</p>}
-                {v.dataHoraEntrada && <p style={infoStyle}>⬇️ Entrada: {formatarDataHora(v.dataHoraEntrada)}</p>}
-                {v.dataHoraSaida && <p style={infoStyle}>⬆️ Saída: {formatarDataHora(v.dataHoraSaida)}</p>}
+                {v.dataHoraEntrada && <p style={infoStyle}>⬇️ Entrada registrada: {formatarDataHora(v.dataHoraEntrada)}</p>}
+                {v.dataHoraSaida && <p style={infoStyle}>⬆️ Saída registrada: {formatarDataHora(v.dataHoraSaida)}</p>}
               </div>
               <span style={{ background: (corStatus[v.status] || "#38bdf8") + "22", color: corStatus[v.status] || "#38bdf8", padding: "4px 10px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: "bold", whiteSpace: "nowrap" }}>
                 {labelStatus[v.status] || v.status}

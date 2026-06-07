@@ -21,10 +21,10 @@ export const storage = getStorage(app);
 export const messaging = getMessaging(app);
 
 // Conecta aos emuladores apenas em desenvolvimento
-if (import.meta.env.DEV) {
-  connectFirestoreEmulator(db, "localhost", 8080);
-  connectAuthEmulator(auth, "http://localhost:9099");
-}
+//if (import.meta.env.DEV) {
+ // connectFirestoreEmulator(db, "localhost", 8080);
+ // connectAuthEmulator(auth, "http://localhost:9099");
+//}
 
 export async function solicitarPermissaoNotificacao() {
   try {
