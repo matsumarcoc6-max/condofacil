@@ -133,3 +133,49 @@ exports.cadastrarMoradoresEmLote = onCall(
     return resultados;
   }
 );
+exports.expirarVisitas = require("firebase-functions/v2/scheduler").onSchedule(
+  { schedule: "0 0 * * *", region: "southamerica-east1", timeZone: "America/Sao_Paulo" },
+  async () => {
+    const db = getFirestore();
+    const agora = new Date();
+    const dozeHorasAtras = new Date(agora.getTime() - 12 * 60 * 60 * 1000);
+
+    const snap = await db.collection("visitas").where("status", "==", "dentro").get();
+    if (snap.empty) return;
+
+    const batch = db.batch();
+    let total = 0;
+
+    snap.docs.forEach((docSnap) => {
+      const v = docSnap.data();
+
+      if (v.visitaProlongada && v.dataSaidaPrevista) {
+        // Visita prolongada — expira só depois da data de saída prevista
+        const saidaPrevista = v.dataSaidaPrevista.toDate ? v.dataSaidaPrevista.toDate() : new Date(v.dataSaidaPrevista);
+        if (agora > saidaPrevista) {
+          batch.update(docSnap.ref, { status: "expirado" });
+          total++;
+        }
+      } else {
+        // Visita comum — expira após 12 horas da entrada
+        if (v.dataHoraEntrada) {
+          const entrada = v.dataHoraEntrada.toDate ? v.dataHoraEntrada.toDate() : new Date(v.dataHoraEntrada);
+          if (entrada < dozeHorasAtras) {
+            batch.update(docSnap.ref, { status: "expirado" });
+            total++;
+          }
+        } else if (v.dataHoraAgendada) {
+          // Se entrou mas não registrou entrada, usa a data agendada como referência
+          const agendada = v.dataHoraAgendada.toDate ? v.dataHoraAgendada.toDate() : new Date(v.dataHoraAgendada);
+          if (agendada < dozeHorasAtras) {
+            batch.update(docSnap.ref, { status: "expirado" });
+            total++;
+          }
+        }
+      }
+    });
+
+    if (total > 0) await batch.commit();
+    console.log(`Visitas expiradas: ${total}`);
+  }
+);
