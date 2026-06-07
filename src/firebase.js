@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getAuth, connectAuthEmulator } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
@@ -20,6 +20,12 @@ export const auth = getAuth(app);
 export const storage = getStorage(app);
 export const messaging = getMessaging(app);
 
+// Conecta aos emuladores apenas em desenvolvimento
+if (import.meta.env.DEV) {
+  connectFirestoreEmulator(db, "localhost", 8080);
+  connectAuthEmulator(auth, "http://localhost:9099");
+}
+
 export async function solicitarPermissaoNotificacao() {
   try {
     const permission = await Notification.requestPermission();
@@ -30,7 +36,7 @@ export async function solicitarPermissaoNotificacao() {
     console.log("SW registrado:", registration);
 
     const token = await getToken(messaging, {
-     vapidKey: import.meta.env.VITE_VAPID_KEY,
+      vapidKey: import.meta.env.VITE_VAPID_KEY,
       serviceWorkerRegistration: registration,
     });
 
@@ -43,6 +49,7 @@ export async function solicitarPermissaoNotificacao() {
 }
 
 export { onMessage };
+
 export function configurarNotificacaoForeground() {
   onMessage(messaging, (payload) => {
     const { title, body } = payload.notification;
