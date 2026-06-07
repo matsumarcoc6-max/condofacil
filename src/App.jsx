@@ -19,6 +19,8 @@ import AchadosPerdidos from "./pages/AchadosPerdidos";
 import TelefonesUteis from "./pages/TelefonesUteis";
 import VisitaPublica from "./pages/VisitaPublica";
 import BannerInstalarIOS from "./components/BannerInstalarIOS";
+import Privacidade from "./pages/Privacidade";
+import MeuPerfil from "./pages/MeuPerfil";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -31,6 +33,7 @@ export default function App() {
   const [mensagemRecuperacao, setMensagemRecuperacao] = useState("");
   const [condominio, setCondominio] = useState(null);
   const [perfil, setPerfil] = useState(null);
+  const [dadosUsuario, setDadosUsuario] = useState(null);
   const [pagina, setPagina] = useState("dashboard");
   const [menuAberto, setMenuAberto] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -77,8 +80,9 @@ export default function App() {
     }
     const perfilDoc = await getDoc(doc(db, "usuarios", uid));
     if (perfilDoc.exists()) {
-      setPerfil(perfilDoc.data().perfil);
-    }
+  setPerfil(perfilDoc.data().perfil);
+  setDadosUsuario(perfilDoc.data());
+}
     try {
       const { solicitarPermissaoNotificacao } = await import("./firebase");
       const token = await solicitarPermissaoNotificacao();
@@ -126,6 +130,7 @@ export default function App() {
     { id: "pets", label: "🐾 Animais", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "achados", label: "🔍 Achados e Perdidos", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
     { id: "telefones", label: "📞 Telefones Úteis", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
+    { id: "perfil", label: "👤 Meu Perfil", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
   ];
 
   const renderPagina = () => {
@@ -144,6 +149,7 @@ export default function App() {
       case "pets": return <Pets perfil={perfil} />;
       case "achados": return <AchadosPerdidos perfil={perfil} />;
       case "telefones": return <TelefonesUteis perfil={perfil} />;
+      case "perfil": return <MeuPerfil user={user} perfil={perfil} dadosUsuario={dadosUsuario} />;
       default: return <Dashboard perfil={perfil} />;
     }
   };
@@ -151,6 +157,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/v/:id" element={<VisitaPublica />} />
+      <Route path="/privacidade" element={<Privacidade />} />
       <Route path="*" element={
         !user ? (
           <div style={styles.container}>
@@ -169,6 +176,12 @@ export default function App() {
                 <>
                   <button style={styles.botao} onClick={login}>Entrar</button>
                   <p onClick={() => { setEsqueceuSenha(true); setErro(""); }} style={{ color: "#38bdf8", fontSize: "0.85rem", cursor: "pointer", marginTop: "12px" }}>Esqueci minha senha</p>
+                  <p
+  onClick={() => window.open("/privacidade", "_blank")}
+  style={{ color: "#64748b", fontSize: "0.8rem", cursor: "pointer", marginTop: "8px" }}
+>
+  Política de Privacidade
+</p>
                 </>
               ) : (
                 <>

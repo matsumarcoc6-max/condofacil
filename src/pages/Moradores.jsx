@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { db, auth } from "../firebase";
-import { collection, getDocs, orderBy, query, serverTimestamp, setDoc, doc } from "firebase/firestore";
+import { collection, getDocs, orderBy, query, serverTimestamp, setDoc, doc, where, deleteDoc, updateDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import * as XLSX from "xlsx";
@@ -14,6 +14,7 @@ export default function Moradores() {
   const [bloco, setBloco] = useState("");
   const [perfil, setPerfil] = useState("morador");
   const [salvando, setSalvando] = useState(false);
+  const [aceiteLGPD, setAceiteLGPD] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
@@ -22,13 +23,33 @@ export default function Moradores() {
   const [filtroBloco, setFiltroBloco] = useState("todos");
   const [importando, setImportando] = useState(false);
 const [resultadoImport, setResultadoImport] = useState(null);
+const [solicitacoes, setSolicitacoes] = useState([]);
+const [executando, setExecutando] = useState("");
 
-  useEffect(() => { carregarMoradores(); }, []);
+  useEffect(() => { carregarMoradores(); carregarSolicitacoes(); }, []);
 
   async function carregarMoradores() {
     const q = query(collection(db, "usuarios"), orderBy("criado_em", "desc"));
     const snap = await getDocs(q);
     setMoradores(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  }
+  async function carregarSolicitacoes() {
+    const q = query(collection(db, "solicitacoes_exclusao"), where("status", "==", "pendente"), orderBy("criado_em", "desc"));
+    const snap = await getDocs(q);
+    setSolicitacoes(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  }
+
+  async function executarExclusao(solicitacao) {
+    if (!window.confirm(`Confirma a exclusão permanente dos dados de ${solicitacao.nome}?`)) return;
+    setExecutando(solicitacao.id);
+    try {
+      await deleteDoc(doc(db, "usuarios", solicitacao.uid));
+      await updateDoc(doc(db, "solicitacoes_exclusao", solicitacao.id), { status: "executado" });
+      setSolicitacoes((prev) => prev.filter((s) => s.id !== solicitacao.id));
+    } catch (e) {
+      alert("Erro ao executar exclusão: " + e.message);
+    }
+    setExecutando("");
   }
   async function importarPlanilha(e) {
     const arquivo = e.target.files[0];
@@ -94,6 +115,7 @@ const [resultadoImport, setResultadoImport] = useState(null);
 
       setNome(""); setEmail(""); setSenha(""); setApartamento(""); setBloco(""); setPerfil("morador");
       setSucesso("Usuario cadastrado com sucesso!");
+      setAceiteLGPD(false);
       carregarMoradores();
     } catch (e) {
       if (e.code === "auth/email-already-in-use") {
@@ -130,6 +152,32 @@ const [resultadoImport, setResultadoImport] = useState(null);
 
       {/* Importação em lote */}
 <div style={{ background: "#1e293b", padding: "24px", borderRadius: "12px", marginBottom: "24px" }}>
+  {/* Solicitações de exclusão */}
+{solicitacoes.length > 0 && (
+  <div style={{ background: "#1e293b", padding: "24px", borderRadius: "12px", marginBottom: "24px", borderLeft: "4px solid #ef4444" }}>
+    <h3 style={{ color: "#ef4444", marginBottom: "16px" }}>🗑️ Solicitações de exclusão de dados ({solicitacoes.length})</h3>
+    {solicitacoes.map((s) => (
+      <div key={s.id} style={{ background: "#0f172a", padding: "16px", borderRadius: "8px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+        <div>
+          <p style={{ color: "#f1f5f9", margin: 0, fontWeight: "500" }}>{s.nome}</p>
+          <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: "0.85rem" }}>
+            {s.email} — {s.bloco ? `Bloco ${s.bloco} — ` : ""}{s.apartamento ? `Apto ${s.apartamento}` : ""}
+          </p>
+          <p style={{ color: "#475569", margin: "4px 0 0", fontSize: "0.8rem" }}>
+            Solicitado em: {s.criado_em?.toDate().toLocaleDateString("pt-BR")}
+          </p>
+        </div>
+        <button
+          onClick={() => executarExclusao(s)}
+          disabled={executando === s.id}
+          style={{ padding: "6px 16px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "bold", opacity: executando === s.id ? 0.6 : 1 }}
+        >
+          {executando === s.id ? "Excluindo..." : "Executar exclusão"}
+        </button>
+      </div>
+    ))}
+  </div>
+)}
   <h3 style={{ color: "#f1f5f9", marginBottom: "8px" }}>Importar moradores via planilha</h3>
   <p style={{ color: "#64748b", fontSize: "0.85rem", marginBottom: "12px" }}>
     Baixe o modelo, preencha e faça o upload. Campos: nome, email, senha, apartamento, bloco, perfil.
@@ -197,14 +245,35 @@ const [resultadoImport, setResultadoImport] = useState(null);
             {mostrarSenha ? "🙈" : "👁️"}
           </span>
         </div>
-        <select style={inp} value={perfil} onChange={(e) => setPerfil(e.target.value)}>
+       <select style={inp} value={perfil} onChange={(e) => setPerfil(e.target.value)}>
           <option value="morador">Morador</option>
           <option value="porteiro">Porteiro</option>
           <option value="sindico">Sindico</option>
         </select>
+
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "12px", padding: "12px", background: "#0f172a", borderRadius: "8px", border: "1px solid #334155" }}>
+          <input
+            type="checkbox"
+            id="aceiteLGPD"
+            checked={aceiteLGPD}
+            onChange={(e) => setAceiteLGPD(e.target.checked)}
+            style={{ width: "16px", height: "16px", marginTop: "2px", cursor: "pointer", flexShrink: 0 }}
+          />
+          <label htmlFor="aceiteLGPD" style={{ color: "#94a3b8", fontSize: "0.85rem", lineHeight: "1.5", cursor: "pointer" }}>
+            Li e aceito a{" "}
+            <span
+              onClick={() => window.open("/privacidade", "_blank")}
+              style={{ color: "#38bdf8", textDecoration: "underline", cursor: "pointer" }}
+            >
+              Política de Privacidade
+            </span>
+            {" "}e autorizo o tratamento dos meus dados conforme a LGPD.
+          </label>
+        </div>
+
         {erro && <p style={{ color: "#ef4444", fontSize: "0.9rem", marginBottom: "8px" }}>{erro}</p>}
         {sucesso && <p style={{ color: "#22c55e", fontSize: "0.9rem", marginBottom: "8px" }}>{sucesso}</p>}
-        <button style={btn} onClick={cadastrarMorador} disabled={salvando}>
+        <button style={btn} onClick={cadastrarMorador} disabled={salvando || !aceiteLGPD}>
           {salvando ? "Cadastrando..." : "Cadastrar usuario"}
         </button>
       </div>
