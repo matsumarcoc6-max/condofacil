@@ -21,6 +21,7 @@ import VisitaPublica from "./pages/VisitaPublica";
 import BannerInstalarIOS from "./components/BannerInstalarIOS";
 import Privacidade from "./pages/Privacidade";
 import MeuPerfil from "./pages/MeuPerfil";
+import Cobrancas from "./pages/Cobrancas";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -130,6 +131,7 @@ export default function App() {
     { id: "pets", label: "🐾 Animais", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "achados", label: "🔍 Achados e Perdidos", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
     { id: "telefones", label: "📞 Telefones Úteis", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
+    { id: "cobrancas", label: "💳 Cobranças", perfis: ["admin_geral", "sindico", "morador"] },
     { id: "perfil", label: "👤 Meu Perfil", perfis: ["admin_geral", "sindico", "morador", "porteiro"] },
   ];
 
@@ -149,6 +151,7 @@ export default function App() {
       case "pets": return <Pets perfil={perfil} />;
       case "achados": return <AchadosPerdidos perfil={perfil} />;
       case "telefones": return <TelefonesUteis perfil={perfil} />;
+      case "cobrancas": return <Cobrancas perfil={perfil} user={user} dadosUsuario={dadosUsuario} />;
       case "perfil": return <MeuPerfil user={user} perfil={perfil} dadosUsuario={dadosUsuario} />;
       default: return <Dashboard perfil={perfil} />;
     }
