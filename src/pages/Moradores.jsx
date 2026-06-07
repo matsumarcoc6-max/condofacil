@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { db, auth } from "../firebase";
 import { collection, getDocs, orderBy, query, serverTimestamp, setDoc, doc } from "firebase/firestore";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import * as XLSX from "xlsx";
 
-export default function Moradores({ perfil: perfilLogado }) {
+export default function Moradores() {
   const [moradores, setMoradores] = useState([]);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -18,6 +20,8 @@ export default function Moradores({ perfil: perfilLogado }) {
   const [busca, setBusca] = useState("");
   const [filtroPerfil, setFiltroPerfil] = useState("todos");
   const [filtroBloco, setFiltroBloco] = useState("todos");
+  const [importando, setImportando] = useState(false);
+const [resultadoImport, setResultadoImport] = useState(null);
 
   useEffect(() => { carregarMoradores(); }, []);
 
@@ -25,6 +29,39 @@ export default function Moradores({ perfil: perfilLogado }) {
     const q = query(collection(db, "usuarios"), orderBy("criado_em", "desc"));
     const snap = await getDocs(q);
     setMoradores(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  }
+  async function importarPlanilha(e) {
+    const arquivo = e.target.files[0];
+    if (!arquivo) return;
+    setImportando(true);
+    setResultadoImport(null);
+
+    try {
+      const buffer = await arquivo.arrayBuffer();
+      const wb = XLSX.read(buffer, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const dados = XLSX.utils.sheet_to_json(ws);
+
+      const moradores = dados.map((row) => ({
+        nome: row["nome"] || row["Nome"] || "",
+        email: row["email"] || row["Email"] || "",
+        senha: String(row["senha"] || row["Senha"] || ""),
+        apartamento: String(row["apartamento"] || row["Apartamento"] || ""),
+        bloco: String(row["bloco"] || row["Bloco"] || ""),
+        perfil: row["perfil"] || row["Perfil"] || "morador",
+      }));
+
+      const functions = getFunctions(undefined, "southamerica-east1");
+      const cadastrar = httpsCallable(functions, "cadastrarMoradoresEmLote");
+      const resultado = await cadastrar({ moradores });
+      setResultadoImport(resultado.data);
+      carregarMoradores();
+    } catch (e) {
+      setResultadoImport({ erro: e.message });
+    }
+
+    setImportando(false);
+    e.target.value = "";
   }
 
   async function cadastrarMorador() {
@@ -91,6 +128,55 @@ export default function Moradores({ perfil: perfilLogado }) {
     <div style={{ padding: "24px" }}>
       <h2 style={{ color: "#38bdf8", marginBottom: "20px" }}>Moradores e Usuarios</h2>
 
+      {/* Importação em lote */}
+<div style={{ background: "#1e293b", padding: "24px", borderRadius: "12px", marginBottom: "24px" }}>
+  <h3 style={{ color: "#f1f5f9", marginBottom: "8px" }}>Importar moradores via planilha</h3>
+  <p style={{ color: "#64748b", fontSize: "0.85rem", marginBottom: "12px" }}>
+    Baixe o modelo, preencha e faça o upload. Campos: nome, email, senha, apartamento, bloco, perfil.
+  </p>
+  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "12px" }}>
+    <button
+      style={{ ...btn, background: "transparent", color: "#38bdf8", border: "1px solid #38bdf8" }}
+      onClick={() => {
+        const modelo = [{ nome: "João Silva", email: "joao@email.com", senha: "123456", apartamento: "101", bloco: "A", perfil: "morador" }];
+        const ws = XLSX.utils.json_to_sheet(modelo);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Moradores");
+        XLSX.writeFile(wb, "modelo-moradores.xlsx");
+      }}
+    >
+      ⬇️ Baixar modelo
+    </button>
+    <label style={{ ...btn, marginTop: "0", cursor: "pointer", opacity: importando ? 0.6 : 1 }}>
+      {importando ? "Importando..." : "📂 Selecionar planilha"}
+      <input type="file" accept=".xlsx,.xls,.csv" onChange={importarPlanilha} style={{ display: "none" }} disabled={importando} />
+    </label>
+  </div>
+  {resultadoImport && !resultadoImport.erro && (
+    <div>
+      {resultadoImport.criados.length > 0 && (
+        <p style={{ color: "#22c55e", fontSize: "0.9rem", margin: "0 0 4px" }}>
+          ✅ {resultadoImport.criados.length} morador{resultadoImport.criados.length !== 1 ? "es" : ""} cadastrado{resultadoImport.criados.length !== 1 ? "s" : ""} com sucesso.
+        </p>
+      )}
+      {resultadoImport.falhas.length > 0 && (
+        <div>
+          <p style={{ color: "#ef4444", fontSize: "0.9rem", margin: "0 0 4px" }}>
+            ❌ {resultadoImport.falhas.length} falha{resultadoImport.falhas.length !== 1 ? "s" : ""}:
+          </p>
+          {resultadoImport.falhas.map((f, i) => (
+            <p key={i} style={{ color: "#94a3b8", fontSize: "0.8rem", margin: "0 0 2px" }}>
+              • {f.email}: {f.motivo}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  )}
+  {resultadoImport?.erro && (
+    <p style={{ color: "#ef4444", fontSize: "0.9rem", margin: 0 }}>❌ Erro: {resultadoImport.erro}</p>
+  )}
+</div>
       <div style={{ background: "#1e293b", padding: "24px", borderRadius: "12px", marginBottom: "24px" }}>
         <h3 style={{ color: "#f1f5f9", marginBottom: "12px" }}>Cadastrar usuario</h3>
         <input style={inp} placeholder="Nome completo *" value={nome} onChange={(e) => setNome(e.target.value)} />
@@ -114,7 +200,7 @@ export default function Moradores({ perfil: perfilLogado }) {
         <select style={inp} value={perfil} onChange={(e) => setPerfil(e.target.value)}>
           <option value="morador">Morador</option>
           <option value="porteiro">Porteiro</option>
-          {perfilLogado === "admin_geral" && <option value="sindico">Sindico</option>}
+          <option value="sindico">Sindico</option>
         </select>
         {erro && <p style={{ color: "#ef4444", fontSize: "0.9rem", marginBottom: "8px" }}>{erro}</p>}
         {sucesso && <p style={{ color: "#22c55e", fontSize: "0.9rem", marginBottom: "8px" }}>{sucesso}</p>}
