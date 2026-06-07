@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
-import { collection, addDoc, getDocs, orderBy, query, serverTimestamp, doc, updateDoc } from "firebase/firestore";
+import {
+  collection, addDoc, getDocs, orderBy, query,
+  serverTimestamp, doc, updateDoc, where,
+} from "firebase/firestore";
 
-export default function Reservas() {
+export default function Reservas({ perfil }) {
   const [reservas, setReservas] = useState([]);
   const [area, setArea] = useState("salao_festas");
   const [unidade, setUnidade] = useState("1");
@@ -14,6 +17,8 @@ export default function Reservas() {
   const [observacao, setObservacao] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
+  const [ocupados, setOcupados] = useState([]);
+  const [filtroPeriodo, setFiltroPeriodo] = useState("proximas");
 
   const areasConfig = {
     salao_festas: { nome: "Salão de Festas", unidades: 1 },
@@ -26,10 +31,28 @@ export default function Reservas() {
 
   useEffect(() => { carregarReservas(); }, []);
 
+  // Atualiza horários ocupados quando muda área ou data
+  useEffect(() => {
+    if (data) buscarOcupados();
+    else setOcupados([]);
+  }, [area, unidade, data]);
+
   async function carregarReservas() {
     const q = query(collection(db, "reservas"), orderBy("criado_em", "desc"));
     const snap = await getDocs(q);
     setReservas(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  }
+
+  async function buscarOcupados() {
+    const nomeArea = getNomeArea();
+    const q = query(
+      collection(db, "reservas"),
+      where("area", "==", nomeArea),
+      where("data", "==", data),
+      where("status", "!=", "cancelada")
+    );
+    const snap = await getDocs(q);
+    setOcupados(snap.docs.map((d) => d.data()));
   }
 
   function getNomeArea() {
@@ -39,20 +62,41 @@ export default function Reservas() {
     return config.nome;
   }
 
+  function temConflito(inicioNovo, fimNovo, reservasExistentes) {
+    return reservasExistentes.some(
+      (r) => !(fimNovo <= r.horarioInicio || inicioNovo >= r.horarioFim)
+    );
+  }
+
   async function realizarReserva() {
     if (!apartamento || !responsavel || !data || !horarioInicio || !horarioFim) {
-      setErro("Preencha todos os campos obrigatorios.");
+      setErro("Preencha todos os campos obrigatórios.");
       return;
     }
+    if (horarioFim <= horarioInicio) {
+      setErro("O horário de fim deve ser após o horário de início.");
+      return;
+    }
+
+    // Busca conflitos diretamente no banco (dados sempre atualizados)
     const nomeArea = getNomeArea();
-    const conflito = reservas.find(
-      (r) => r.area === nomeArea && r.data === data && r.status !== "cancelada" &&
-        !(horarioFim <= r.horarioInicio || horarioInicio >= r.horarioFim)
+    const q = query(
+      collection(db, "reservas"),
+      where("area", "==", nomeArea),
+      where("data", "==", data),
+      where("status", "!=", "cancelada")
     );
-    if (conflito) {
-      setErro(`Conflito de horario com reserva existente (${conflito.horarioInicio} - ${conflito.horarioFim}).`);
+    const snap = await getDocs(q);
+    const reservasAtuais = snap.docs.map((d) => d.data());
+
+    if (temConflito(horarioInicio, horarioFim, reservasAtuais)) {
+      const conflito = reservasAtuais.find(
+        (r) => !(horarioFim <= r.horarioInicio || horarioInicio >= r.horarioFim)
+      );
+      setErro(`Horário conflita com reserva existente: ${conflito.horarioInicio} às ${conflito.horarioFim} (Apto ${conflito.apartamento}).`);
       return;
     }
+
     setErro("");
     setSalvando(true);
     await addDoc(collection(db, "reservas"), {
@@ -68,16 +112,25 @@ export default function Reservas() {
     });
     setApartamento(""); setResponsavel(""); setData("");
     setHorarioInicio(""); setHorarioFim(""); setObservacao("");
+    setOcupados([]);
     setSalvando(false);
     carregarReservas();
   }
 
   async function cancelarReserva(id) {
+    if (!window.confirm("Confirma o cancelamento desta reserva?")) return;
     await updateDoc(doc(db, "reservas", id), { status: "cancelada" });
     carregarReservas();
   }
 
   const corStatus = { confirmada: "#22c55e", pendente: "#f59e0b", cancelada: "#ef4444" };
+
+  const hoje = new Date().toISOString().split("T")[0];
+  const reservasFiltradas = reservas.filter((r) => {
+    if (filtroPeriodo === "proximas") return r.data >= hoje && r.status !== "cancelada";
+    if (filtroPeriodo === "historico") return r.data < hoje || r.status === "cancelada";
+    return true;
+  });
 
   return (
     <div style={{ padding: "24px" }}>
@@ -101,15 +154,37 @@ export default function Reservas() {
         )}
 
         <input style={inp} placeholder="Apartamento (ex: 302)" value={apartamento} onChange={(e) => setApartamento(e.target.value)} />
-        <input style={inp} placeholder="Nome do responsavel" value={responsavel} onChange={(e) => setResponsavel(e.target.value)} />
-        <input style={inp} type="date" value={data} onChange={(e) => setData(e.target.value)} />
+        <input style={inp} placeholder="Nome do responsável" value={responsavel} onChange={(e) => setResponsavel(e.target.value)} />
+        <input style={inp} type="date" value={data} min={hoje} onChange={(e) => setData(e.target.value)} />
+
+        {/* Horários ocupados */}
+        {data && ocupados.length > 0 && (
+          <div style={{ background: "#0f172a", borderRadius: "8px", padding: "12px", marginBottom: "10px", border: "1px solid #f59e0b" }}>
+            <p style={{ color: "#f59e0b", fontSize: "0.85rem", margin: "0 0 6px", fontWeight: "bold" }}>
+              ⚠️ Horários já reservados nesta data:
+            </p>
+            {ocupados.map((o, i) => (
+              <p key={i} style={{ color: "#94a3b8", fontSize: "0.85rem", margin: "2px 0" }}>
+                • {o.horarioInicio} às {o.horarioFim} — Apto {o.apartamento}
+              </p>
+            ))}
+          </div>
+        )}
+
+        {data && ocupados.length === 0 && (
+          <div style={{ background: "#0f172a", borderRadius: "8px", padding: "10px", marginBottom: "10px", border: "1px solid #22c55e" }}>
+            <p style={{ color: "#22c55e", fontSize: "0.85rem", margin: 0 }}>
+              ✅ Nenhuma reserva nesta data — todos os horários disponíveis.
+            </p>
+          </div>
+        )}
 
         <div style={{ display: "flex", gap: "8px" }}>
-          <input style={{ ...inp, marginRight: "0" }} type="time" value={horarioInicio} onChange={(e) => setHorarioInicio(e.target.value)} />
-          <input style={inp} type="time" value={horarioFim} onChange={(e) => setHorarioFim(e.target.value)} />
+          <input style={{ ...inp, flex: 1 }} type="time" value={horarioInicio} onChange={(e) => setHorarioInicio(e.target.value)} />
+          <input style={{ ...inp, flex: 1 }} type="time" value={horarioFim} onChange={(e) => setHorarioFim(e.target.value)} />
         </div>
 
-        <input style={inp} placeholder="Observacao (opcional)" value={observacao} onChange={(e) => setObservacao(e.target.value)} />
+        <input style={inp} placeholder="Observação (opcional)" value={observacao} onChange={(e) => setObservacao(e.target.value)} />
 
         {erro && <p style={{ color: "#ef4444", fontSize: "0.9rem", marginBottom: "8px" }}>{erro}</p>}
 
@@ -118,29 +193,48 @@ export default function Reservas() {
         </button>
       </div>
 
-      {reservas.length === 0 && <p style={{ color: "#64748b", textAlign: "center" }}>Nenhuma reserva registrada ainda.</p>}
+      {/* Filtros */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
+        {[
+          { id: "proximas", label: "Próximas" },
+          { id: "historico", label: "Histórico" },
+          { id: "todas", label: "Todas" },
+        ].map((f) => (
+          <button key={f.id} onClick={() => setFiltroPeriodo(f.id)} style={{ padding: "6px 16px", borderRadius: "8px", border: "none", cursor: "pointer", fontWeight: "bold", fontSize: "0.85rem", background: filtroPeriodo === f.id ? "#38bdf8" : "#1e293b", color: filtroPeriodo === f.id ? "#0f172a" : "#94a3b8" }}>
+            {f.label}
+          </button>
+        ))}
+      </div>
 
-      {reservas.map((r) => (
+      <p style={{ color: "#64748b", fontSize: "0.85rem", marginBottom: "12px" }}>
+        {reservasFiltradas.length} reserva{reservasFiltradas.length !== 1 ? "s" : ""}
+      </p>
+
+      {reservasFiltradas.length === 0 && (
+        <p style={{ color: "#64748b", textAlign: "center" }}>Nenhuma reserva encontrada.</p>
+      )}
+
+      {reservasFiltradas.map((r) => (
         <div key={r.id} style={{ background: "#1e293b", padding: "20px", borderRadius: "12px", marginBottom: "12px", borderLeft: "4px solid " + (corStatus[r.status] || "#38bdf8") }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
             <div>
               <h4 style={{ color: "#f1f5f9", margin: 0, marginBottom: "4px" }}>{r.area}</h4>
               <p style={{ color: "#94a3b8", margin: 0, fontSize: "0.9rem" }}>Apto {r.apartamento} — {r.responsavel}</p>
+              <p style={{ color: "#475569", margin: "4px 0 0", fontSize: "0.85rem" }}>
+                📅 {r.data} — {r.horarioInicio} às {r.horarioFim}
+              </p>
+              {r.observacao && <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: "0.85rem" }}>💬 {r.observacao}</p>}
             </div>
-            <span style={{ background: (corStatus[r.status] || "#38bdf8") + "22", color: corStatus[r.status] || "#38bdf8", padding: "4px 10px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: "bold", textTransform: "capitalize" }}>
-              {r.status}
-            </span>
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-            <span style={{ color: "#475569", fontSize: "0.85rem" }}>
-              {r.data} — {r.horarioInicio} às {r.horarioFim}
-            </span>
-            {r.observacao && <span style={{ color: "#64748b", fontSize: "0.85rem" }}>💬 {r.observacao}</span>}
-            {r.status !== "cancelada" && (
-              <button onClick={() => cancelarReserva(r.id)} style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
-                Cancelar
-              </button>
-            )}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+              <span style={{ background: (corStatus[r.status] || "#38bdf8") + "22", color: corStatus[r.status] || "#38bdf8", padding: "4px 10px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: "bold", textTransform: "capitalize" }}>
+                {r.status}
+              </span>
+              {r.status !== "cancelada" && (
+                <button onClick={() => cancelarReserva(r.id)} style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
+                  Cancelar
+                </button>
+              )}
+            </div>
           </div>
         </div>
       ))}
