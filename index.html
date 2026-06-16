@@ -1,20 +1,1207 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/icons/icon-192.png" />
-    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#38bdf8" />
-    <meta name="description" content="Sistema de Gestão Condominial" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="CondoFácil" />
-    <title>CondoFácil</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0P828H6E7T"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-0P828H6E7T');
+</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CondoFácil — Sistema de Gestão Condominial</title>
+  <meta name="description" content="Sistema completo de gestão condominial. PWA que funciona no celular, tablet e computador sem instalação. Portaria virtual, financeiro, enquetes, QR code e muito mais." />
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0P828H6E7T"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-0P828H6E7T');
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:     #0f1117;
+      --paper:   #f5f2eb;
+      --cream:   #ede9df;
+      --accent:  #1a6b3c;
+      --accent2: #e8a020;
+      --muted:   #6b6760;
+      --border:  #d4cfc4;
+      --white:   #ffffff;
+      --radius:  12px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(245, 242, 235, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      font-family: 'Fraunces', serif;
+      font-weight: 900;
+      font-size: 1.4rem;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+    .nav-logo span { color: var(--ink); }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-cta {
+      background: var(--accent);
+      color: var(--white) !important;
+      padding: 0.5rem 1.2rem;
+      border-radius: 100px;
+      font-weight: 600 !important;
+    }
+    .nav-cta:hover { background: #145730; color: var(--white) !important; }
+    .hamburger { display: none; cursor: pointer; background: none; border: none; }
+    .hamburger svg { width: 24px; height: 24px; stroke: var(--ink); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: calc(100vh - 64px);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 4rem;
+      padding: 5rem 4rem 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #d4edda;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.9rem;
+      border-radius: 100px;
+      margin-bottom: 1.5rem;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+    h1 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.8rem, 5vw, 4.2rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.5rem;
+    }
+    h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+    .hero-sub {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 480px;
+      margin-bottom: 2.5rem;
+      line-height: 1.7;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--white);
+      padding: 0.85rem 2rem;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-primary:hover { background: #145730; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(26,107,60,0.25); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--ink);
+      padding: 0.85rem 2rem;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-decoration: none;
+      border: 1.5px solid var(--border);
+      transition: all 0.2s;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-secondary:hover { border-color: var(--ink); }
+
+    .hero-visual {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .phone-mockup {
+      width: 260px;
+      height: 520px;
+      background: var(--ink);
+      border-radius: 36px;
+      border: 8px solid #2a2d35;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.06) inset;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(160deg, #0f1117 0%, #1a2030 100%);
+      display: flex;
+      flex-direction: column;
+      padding: 1.2rem 1rem;
+      gap: 0.7rem;
+    }
+    .phone-status {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.55rem;
+      color: rgba(255,255,255,0.4);
+      padding: 0 0.2rem;
+    }
+    .phone-header {
+      background: rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 0.7rem;
+    }
+    .phone-header-title {
+      font-family: 'Fraunces', serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.2rem;
+    }
+    .phone-header-sub { font-size: 0.52rem; color: rgba(255,255,255,0.4); }
+    .phone-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .phone-card {
+      background: rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 0.65rem;
+    }
+    .phone-card-label { font-size: 0.48rem; color: rgba(255,255,255,0.4); margin-bottom: 0.25rem; }
+    .phone-card-value { font-size: 0.85rem; font-weight: 700; color: #fff; }
+    .phone-card-value.green { color: #4ade80; }
+    .phone-card-value.yellow { color: var(--accent2); }
+    .phone-alert {
+      background: rgba(232, 160, 32, 0.15);
+      border: 1px solid rgba(232,160,32,0.3);
+      border-radius: 8px;
+      padding: 0.55rem 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .phone-alert-dot { width: 5px; height: 5px; background: var(--accent2); border-radius: 50%; flex-shrink: 0; }
+    .phone-alert-text { font-size: 0.48rem; color: rgba(255,255,255,0.7); line-height: 1.3; }
+    .phone-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.3rem;
+      height: 50px;
+      padding: 0.5rem;
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+    }
+    .bar {
+      flex: 1;
+      border-radius: 3px 3px 0 0;
+      animation: barGrow 1.2s ease-out forwards;
+      transform-origin: bottom;
+    }
+    .bar.receita { background: #4ade80; }
+    .bar.despesa { background: rgba(255,255,255,0.15); }
+    @keyframes barGrow {
+      from { transform: scaleY(0); }
+      to { transform: scaleY(1); }
+    }
+    .phone-notif {
+      background: rgba(74,222,128,0.12);
+      border: 1px solid rgba(74,222,128,0.25);
+      border-radius: 8px;
+      padding: 0.55rem 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .phone-notif-icon { font-size: 0.7rem; }
+    .phone-notif-text { font-size: 0.48rem; color: rgba(255,255,255,0.7); line-height: 1.3; }
+
+    .phone-float {
+      position: absolute;
+      right: -30px;
+      top: 60px;
+      width: 140px;
+      background: var(--white);
+      border-radius: 14px;
+      padding: 0.8rem;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.14);
+    }
+    .float-title { font-size: 0.6rem; font-weight: 700; color: var(--ink); margin-bottom: 0.4rem; }
+    .float-badge {
+      display: inline-block;
+      background: #d4edda;
+      color: var(--accent);
+      font-size: 0.55rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 100px;
+      margin-bottom: 0.5rem;
+    }
+    .float-text { font-size: 0.55rem; color: var(--muted); line-height: 1.4; }
+
+    /* ── STATS ── */
+    .stats {
+      background: var(--ink);
+      padding: 4rem;
+    }
+    .stats-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      text-align: center;
+    }
+    .stat-number {
+      font-family: 'Fraunces', serif;
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .stat-number span { color: var(--accent2); }
+    .stat-label { font-size: 0.85rem; color: rgba(255,255,255,0.45); }
+
+    /* ── SECTION WRAPPER ── */
+    section { padding: 6rem 2rem; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1.2rem;
+    }
+    .section-desc {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 600px;
+      line-height: 1.7;
+    }
+
+    /* ── MODULES ── */
+    .modules-bg { background: var(--cream); }
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3.5rem;
+    }
+    .module-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.8rem;
+      border: 1px solid var(--border);
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .module-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s;
+    }
+    .module-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+    .module-card:hover::after { transform: scaleX(1); }
+    .module-icon {
+      width: 44px; height: 44px;
+      background: #d4edda;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+    .module-name {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 0.5rem;
+    }
+    .module-desc { font-size: 0.87rem; color: var(--muted); line-height: 1.5; }
+    .module-profiles {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+      margin-top: 0.85rem;
+    }
+    .profile-tag {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 100px;
+      background: var(--cream);
+      color: var(--muted);
+    }
+
+    /* ── PRICING ── */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-top: 3.5rem;
+      max-width: 760px;
+    }
+    .price-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      padding: 2.2rem;
+      position: relative;
+      transition: all 0.25s;
+    }
+    .price-card:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(0,0,0,0.1); }
+    .price-card.featured {
+      border-color: var(--accent);
+      background: #f0f9f4;
+    }
+    .price-badge {
+      position: absolute;
+      top: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: var(--white);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.9rem;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+    .price-name {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-bottom: 0.3rem;
+    }
+    .price-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 1.5rem; }
+    .price-amount {
+      display: flex;
+      align-items: baseline;
+      gap: 0.3rem;
+      margin-bottom: 1.5rem;
+    }
+    .price-currency { font-size: 1.1rem; font-weight: 600; color: var(--muted); margin-top: 0.3rem; }
+    .price-value {
+      font-family: 'Fraunces', serif;
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .price-period { font-size: 0.82rem; color: var(--muted); }
+    .price-note {
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: var(--cream);
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+    }
+    .price-features { list-style: none; margin-bottom: 2rem; }
+    .price-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+    .price-features li:last-child { border-bottom: none; }
+    .check { color: var(--accent); font-size: 0.9rem; flex-shrink: 0; margin-top: 0.1rem; }
+    .price-cta {
+      width: 100%;
+      text-align: center;
+      display: block;
+      padding: 0.85rem;
+      border-radius: 100px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .price-cta.outlined {
+      border: 1.5px solid var(--ink);
+      color: var(--ink);
+    }
+    .price-cta.outlined:hover { background: var(--ink); color: var(--white); }
+    .price-cta.solid {
+      background: var(--accent);
+      color: var(--white);
+      border: 1.5px solid var(--accent);
+    }
+    .price-cta.solid:hover { background: #145730; }
+
+    /* ── SECURITY ── */
+    .security-bg { background: var(--cream); }
+    .security-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .sec-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 1.6rem;
+      border: 1px solid var(--border);
+    }
+    .sec-icon { font-size: 1.5rem; margin-bottom: 0.8rem; }
+    .sec-title { font-weight: 700; margin-bottom: 0.4rem; font-size: 0.95rem; }
+    .sec-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+
+    /* ── CONTACT ── */
+    .contact-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+      margin-top: 3.5rem;
+    }
+    .contact-info h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .contact-info p { font-size: 0.95rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; }
+    .contact-detail {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+      margin-bottom: 0.75rem;
+      color: var(--muted);
+    }
+    .contact-detail strong { color: var(--ink); }
+    .contact-icon { font-size: 1.1rem; width: 20px; text-align: center; }
+
+    /* ── FORM ── */
+    .form-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 2.2rem;
+      border: 1px solid var(--border);
+    }
+    .form-title {
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.4rem;
+    }
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.92rem;
+      color: var(--ink);
+      background: var(--white);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(26,107,60,0.12);
+    }
+    .form-textarea { resize: vertical; min-height: 120px; }
+    .form-submit {
+      width: 100%;
+      padding: 0.9rem;
+      background: var(--accent);
+      color: var(--white);
+      border: none;
+      border-radius: 100px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .form-submit:hover { background: #145730; transform: translateY(-1px); }
+    .form-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .form-success {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+    .form-success-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .form-success-title { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.2rem; margin-bottom: 0.5rem; }
+    .form-success-text { font-size: 0.9rem; color: var(--muted); }
+    .form-error-msg {
+      display: none;
+      color: #c0392b;
+      font-size: 0.82rem;
+      margin-top: 0.75rem;
+      text-align: center;
+    }
+
+    /* ── DEMO ── */
+    .demo-box {
+      background: var(--ink);
+      border-radius: 20px;
+      padding: 3rem;
+      text-align: center;
+      margin-top: 4rem;
+    }
+    .demo-box h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--white);
+      margin-bottom: 0.75rem;
+    }
+    .demo-box p { color: rgba(255,255,255,0.55); margin-bottom: 1.8rem; font-size: 0.95rem; }
+    .demo-creds {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .cred-item {
+      background: rgba(255,255,255,0.07);
+      border-radius: 10px;
+      padding: 0.8rem 1.4rem;
+      text-align: left;
+    }
+    .cred-label { font-size: 0.65rem; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem; }
+    .cred-value { font-size: 0.9rem; color: var(--white); font-weight: 500; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--ink);
+      padding: 3rem 2rem 2rem;
+      text-align: center;
+    }
+    .footer-logo {
+      font-family: 'Fraunces', serif;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+    .footer-logo span { color: var(--accent2); }
+    .footer-tagline { font-size: 0.85rem; color: rgba(255,255,255,0.35); margin-bottom: 2rem; }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      list-style: none;
+      margin-bottom: 2rem;
+    }
+    .footer-links a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--white); }
+    .footer-copy { font-size: 0.78rem; color: rgba(255,255,255,0.2); }
+
+    /* ── ANIMATIONS ── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .fade-up.visible { opacity: 1; transform: none; }
+    .fade-up:nth-child(2) { transition-delay: 0.1s; }
+    .fade-up:nth-child(3) { transition-delay: 0.2s; }
+    .fade-up:nth-child(4) { transition-delay: 0.3s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; padding: 3rem 1.5rem 2rem; gap: 3rem; min-height: auto; }
+      .hero-visual { order: -1; }
+      .phone-float { display: none; }
+      .stats-inner { grid-template-columns: repeat(2, 1fr); }
+      .modules-grid { grid-template-columns: repeat(2, 1fr); }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
+      .security-grid { grid-template-columns: repeat(2, 1fr); }
+      .contact-wrap { grid-template-columns: 1fr; gap: 2.5rem; }
+      .nav-links { display: none; }
+      .hamburger { display: block; }
+      section { padding: 4rem 1.5rem; }
+      .stats { padding: 3rem 1.5rem; }
+    }
+    @media (max-width: 600px) {
+      .stats-inner { grid-template-columns: 1fr 1fr; }
+      .modules-grid { grid-template-columns: 1fr; }
+      .security-grid { grid-template-columns: 1fr; }
+      .hero-actions { flex-direction: column; }
+      .btn-primary, .btn-secondary { justify-content: center; }
+    }
+
+    /* ── MOBILE MENU ── */
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--paper);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      font-family: 'Fraunces', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .mobile-close {
+      position: absolute;
+      top: 1.5rem; right: 1.5rem;
+      background: none; border: none; cursor: pointer;
+      font-size: 1.5rem; color: var(--ink);
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Condo<span>Fácil</span></a>
+  <ul class="nav-links">
+    <li><a href="#modulos">Módulos</a></li>
+    <li><a href="#planos">Planos</a></li>
+    <li><a href="#seguranca">Segurança</a></li>
+    <li><a href="#contato">Contato</a></li>
+    <li><a href="#demo" class="nav-cta">Ver demo →</a></li>
+  </ul>
+  <button class="hamburger" id="menuBtn" aria-label="Menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="menuClose">✕</button>
+  <a href="#modulos" onclick="closeMobile()">Módulos</a>
+  <a href="#planos" onclick="closeMobile()">Planos</a>
+  <a href="#seguranca" onclick="closeMobile()">Segurança</a>
+  <a href="#contato" onclick="closeMobile()">Contato</a>
+  <a href="#demo" onclick="closeMobile()" style="color:var(--accent)">Ver demo →</a>
+</div>
+
+<!-- HERO -->
+<section style="padding:0; background:var(--paper);">
+  <div class="hero">
+    <div class="hero-text">
+      <div class="hero-eyebrow">PWA — sem instalar pela loja</div>
+      <h1>Gestão do seu <em>condomínio</em> na palma da mão</h1>
+      <p class="hero-sub">Portaria virtual com QR code, financeiro completo, enquetes, avisos e controle total, tudo num único sistema que funciona direto no navegador.</p>
+      <div class="hero-actions">
+        <a href="#demo" class="btn-primary">Acessar demonstração →</a>
+        <a href="#planos" class="btn-secondary">Ver planos</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="phone-mockup">
+        <div class="phone-screen">
+          <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+          <div class="phone-header">
+            <div class="phone-header-title">CondoFácil</div>
+            <div class="phone-header-sub">Residencial das Flores · Dashboard</div>
+          </div>
+          <div class="phone-cards">
+            <div class="phone-card">
+              <div class="phone-card-label">Moradores</div>
+              <div class="phone-card-value">48</div>
+            </div>
+            <div class="phone-card">
+              <div class="phone-card-label">Saldo</div>
+              <div class="phone-card-value green">R$4.820</div>
+            </div>
+            <div class="phone-card">
+              <div class="phone-card-label">Ocorrências</div>
+              <div class="phone-card-value yellow">3</div>
+            </div>
+            <div class="phone-card">
+              <div class="phone-card-label">Reservas hoje</div>
+              <div class="phone-card-value">2</div>
+            </div>
+          </div>
+          <div class="phone-alert">
+            <div class="phone-alert-dot"></div>
+            <div class="phone-alert-text">2 ocorrências abertas há mais de 7 dias aguardando resolução</div>
+          </div>
+          <div class="phone-bars">
+            <div class="bar receita" style="height:70%;animation-delay:0.1s"></div>
+            <div class="bar despesa" style="height:50%;animation-delay:0.2s"></div>
+            <div class="bar receita" style="height:85%;animation-delay:0.3s"></div>
+            <div class="bar despesa" style="height:60%;animation-delay:0.4s"></div>
+            <div class="bar receita" style="height:90%;animation-delay:0.5s"></div>
+            <div class="bar despesa" style="height:40%;animation-delay:0.6s"></div>
+          </div>
+          <div class="phone-notif">
+            <div class="phone-notif-icon">🔔</div>
+            <div class="phone-notif-text">Seu visitante João chegou no condomínio — Apto 42B</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-float">
+        <div class="float-title">Portaria virtual</div>
+        <div class="float-badge">QR Code ativo</div>
+        <div class="float-text">Visitante escaneia o código e morador recebe notificação na hora</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stats-inner">
+    <div>
+      <div class="stat-number">15<span>+</span></div>
+      <div class="stat-label">Módulos integrados</div>
+    </div>
+    <div>
+      <div class="stat-number">4</div>
+      <div class="stat-label">Perfis de acesso</div>
+    </div>
+    <div>
+      <div class="stat-number">99<span>.9%</span></div>
+      <div class="stat-label">Uptime garantido</div>
+    </div>
+    <div>
+      <div class="stat-number">0</div>
+      <div class="stat-label">Instalação necessária</div>
+    </div>
+  </div>
+</div>
+
+<!-- MÓDULOS -->
+<section id="modulos" class="modules-bg">
+  <div class="section-inner">
+    <div class="section-label">Funcionalidades</div>
+    <h2>Tudo que o condomínio precisa</h2>
+    <p class="section-desc">Cada módulo foi pensado para o dia a dia real do síndico, dos moradores e da portaria.</p>
+    <div class="modules-grid">
+      <div class="module-card fade-up">
+        <div class="module-icon">🏠</div>
+        <div class="module-name">Dashboard</div>
+        <div class="module-desc">Painel central com alertas inteligentes, gráficos de receitas vs despesas e visão geral do condomínio em tempo real.</div>
+        <div class="module-profiles">
+          <span class="profile-tag">Todos</span>
+        </div>
+      </div>
+      <div class="module-card fade-up">
+        <div class="module-icon">📱</div>
+        <div class="module-name">Portaria Virtual</div>
+        <div class="module-desc">Morador agenda visita, sistema gera QR code. Visitante apresenta na portaria, morador recebe notificação push na chegada e saída.</div>
+        <div class="module-profiles">
+          <span class="profile-tag">Morador</span>
+          <span class="profile-tag">Porteiro</span>
+        </div>
+      </div>
+      <div class="module-card fade-up">
+        <div class="module-icon">💰</div>
+        <div class="module-name">Financeiro</div>
+        <div class="module-desc">Lançamentos por categoria, filtro por período, gráficos, e exportação de relatórios em PDF e Excel com totais detalhados.</div>
+        <div class="module-profiles">
+          <span class="profile-tag">Admin</span>
+          <span class="profile-tag">Síndico</span>
+        </div>
+      </div>
+      <div class="module-card fade-up">
+        <div class="module-icon">🗳️</div>
+        <div class="module-name">Enquetes</div>
+        <div class="module-desc">Votação com controle de voto único, barra de progresso em tempo real e notificação push automática para todos os moradores.</div>
+        <div class="module-profiles">
+          <span class="profile-tag">Todos</span>
+        </div>
+      </div>
+      <div class="module-card fade-up">
+        <div class="module-icon">📅</div>
+        <div class="module-name">Reservas</div>
+        <div class="module-desc">Moradores solicitam reserva de áreas comuns. Síndico aprova ou recusa com controle automático de conflito de datas.</div>
+        <div class="module-profiles">
+          <span class="profile-tag">Morador</span>
+          <span class="profile-tag">Síndico</span>
+        </div>
+      </div>
+      <div class="module-card fade-up">
+        <div class="module-icon">⚠️</div>
+        <div class="module-name">Ocorrências</div>
+        <div class="module-desc">Abertura e acompanhamento de ocorrências com controle de status e alertas automáticos para itens em atraso.</div>
+        <div class="module-profiles">
+          <span class="profile-tag">Morador</span>
+          <span class="profile-tag">Síndico</span>
+        </div>
+      </div>
+      <div class="module-card fade-up">
+        <div class="module-icon">👥</div>
+        <div class="module-name">Moradores</div>
+        <div class="module-desc">Cadastro individual ou em lote via planilha Excel. Busca por nome, apartamento ou email com filtros por perfil e bloco.</div>
+        <div class="module-profiles">
+          <span class="profile-tag">Admin</span>
+          <span class="profile-tag">Síndico</span>
+        </div>
+      </div>
+      <div class="module-card fade-up">
+        <div class="module-icon">📄</div>
+        <div class="module-name">Documentos</div>
+        <div class="module-desc">Repositório digital de regulamentos, atas, contratos e comunicados com acesso a todos os moradores.</div>
+        <div class="module-profiles">
+          <span class="profile-tag">Todos</span>
+        </div>
+      </div>
+      <div class="module-card fade-up">
+        <div class="module-icon">📢</div>
+        <div class="module-name">Avisos + Mais</div>
+        <div class="module-desc">Comunicados oficiais, veículos, animais de estimação, achados e perdidos e lista de telefones úteis do condomínio.</div>
+        <div class="module-profiles">
+          <span class="profile-tag">Todos</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLANOS -->
+<section id="planos">
+  <div class="section-inner">
+    <div class="section-label">Investimento</div>
+    <h2>Preço justo para cada condomínio</h2>
+    <p class="section-desc">Tudo incluso em qualquer faixa. Sem módulos pagos à parte, sem taxa por usuário ou por perfil.</p>
+
+    <div style="margin-top:3rem; overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:0.95rem;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--ink);">
+            <th style="text-align:left; padding:0.75rem 1rem 0.75rem 0; font-family:'Fraunces',serif; font-size:1rem;">Porte</th>
+            <th style="text-align:left; padding:0.75rem 1rem; font-family:'Fraunces',serif; font-size:1rem;">Unidades</th>
+            <th style="text-align:left; padding:0.75rem 0 0.75rem 1rem; font-family:'Fraunces',serif; font-size:1rem;">Mensalidade</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:1.1rem 1rem 1.1rem 0; font-weight:600;">Pequeno</td>
+            <td style="padding:1.1rem 1rem; color:var(--muted);">até 50 unidades</td>
+            <td style="padding:1.1rem 0 1.1rem 1rem;">
+              <span style="font-family:'Fraunces',serif; font-size:1.5rem; font-weight:900;">R$199</span>
+              <span style="font-size:0.8rem; color:var(--muted);">/mês</span>
+            </td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border); background:rgba(26,107,60,0.04);">
+            <td style="padding:1.1rem 1rem 1.1rem 0; font-weight:600;">
+              Médio
+              <span style="display:inline-block; background:var(--accent); color:#fff; font-size:0.6rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:100px; margin-left:0.5rem; vertical-align:middle;">Mais comum</span>
+            </td>
+            <td style="padding:1.1rem 1rem; color:var(--muted);">51 a 150 unidades</td>
+            <td style="padding:1.1rem 0 1.1rem 1rem;">
+              <span style="font-family:'Fraunces',serif; font-size:1.5rem; font-weight:900;">R$349</span>
+              <span style="font-size:0.8rem; color:var(--muted);">/mês</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:1.1rem 1rem 1.1rem 0; font-weight:600;">Grande</td>
+            <td style="padding:1.1rem 1rem; color:var(--muted);">151 a 300 unidades</td>
+            <td style="padding:1.1rem 0 1.1rem 1rem;">
+              <span style="font-family:'Fraunces',serif; font-size:1.5rem; font-weight:900;">R$549</span>
+              <span style="font-size:0.8rem; color:var(--muted);">/mês</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:2rem; background:var(--cream); border-radius:var(--radius); padding:1.2rem 1.5rem; border:1px solid var(--border); display:flex; align-items:flex-start; gap:0.75rem; max-width:620px;">
+      <span style="font-size:1.1rem; flex-shrink:0;">💡</span>
+      <div>
+        <div style="font-weight:600; font-size:0.9rem; margin-bottom:0.25rem;">Configuração inicial assistida — R$300 (única vez, opcional)</div>
+        <div style="font-size:0.83rem; color:var(--muted); line-height:1.5;">Para quem prefere começar sem preocupação: configuramos o sistema, importamos os moradores e fazemos um treinamento por videochamada. Você começa a usar no mesmo dia.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem;">
+      <a href="#contato" class="btn-primary">Solicitar proposta →</a>
+    </div>
+  </div>
+</section>
+
+<!-- SEGURANÇA -->
+<section id="seguranca" class="security-bg">
+  <div class="section-inner">
+    <div class="section-label">Infraestrutura</div>
+    <h2>Segurança sem concessões</h2>
+    <p class="section-desc">Construído sobre Firebase (Google) e Vercel. Sem servidor próprio para manter, backup automático e HTTPS obrigatório.</p>
+    <div class="security-grid">
+      <div class="sec-card fade-up">
+        <div class="sec-icon">🔐</div>
+        <div class="sec-title">Autenticação Firebase</div>
+        <div class="sec-desc">Login com email e senha, recuperação por email e regras de acesso por perfil validadas no servidor, não só no app.</div>
+      </div>
+      <div class="sec-card fade-up">
+        <div class="sec-icon">📲</div>
+        <div class="sec-title">QR Code seguro</div>
+        <div class="sec-desc">Cada visita gera um ID aleatório único. O link não permite enumeração ou acesso indevido.</div>
+      </div>
+      <div class="sec-card fade-up">
+        <div class="sec-icon">🔑</div>
+        <div class="sec-title">Chaves em variável de ambiente</div>
+        <div class="sec-desc">Chave VAPID das notificações armazenada em variável de ambiente. Nunca exposta no código-fonte.</div>
+      </div>
+      <div class="sec-card fade-up">
+        <div class="sec-icon">🏢</div>
+        <div class="sec-title">Dados isolados</div>
+        <div class="sec-desc">Cada condomínio tem seus dados completamente isolados. Moradores não acessam informações de outros condomínios.</div>
+      </div>
+      <div class="sec-card fade-up">
+        <div class="sec-icon">🚀</div>
+        <div class="sec-title">Deploy automático</div>
+        <div class="sec-desc">Hospedagem na Vercel com HTTPS obrigatório, CDN global e deploy automático a cada atualização do sistema.</div>
+      </div>
+      <div class="sec-card fade-up">
+        <div class="sec-icon">☁️</div>
+        <div class="sec-title">99,9% de uptime</div>
+        <div class="sec-desc">Infraestrutura Google Cloud com backup automático e disponibilidade garantida de 99,9%.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO -->
+<section id="demo" style="background:var(--paper); padding:4rem 2rem;">
+  <div class="section-inner">
+    <div class="demo-box">
+      <h3>Veja o sistema funcionando</h3>
+      <p>Liberamos acesso a um ambiente de demonstração completo com dados reais. Solicite pelo formulário e enviamos as credenciais em até 24 horas.</p>
+      <a href="#contato" class="btn-primary" style="font-size:1.05rem; padding:1rem 2.5rem;">
+        Solicitar acesso à demonstração →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- CONTATO -->
+<section id="contato" class="security-bg">
+  <div class="section-inner">
+    <div class="section-label">Fale conosco</div>
+    <h2>Pronto para começar?</h2>
+    <div class="contact-wrap">
+      <div class="contact-info">
+        <h3>Vamos conversar sobre o seu condomínio</h3>
+        <p>Tire dúvidas, solicite uma demonstração personalizada ou feche o contrato direto por aqui. Respondemos em até 24 horas nos dias úteis.</p>
+        <div class="contact-detail">
+          <span class="contact-icon">📱</span>
+          <span>WhatsApp <strong>(61) 98436-4522</strong></span>
+        </div>
+        <div class="contact-detail">
+          <span class="contact-icon">✉️</span>
+          <span>E-mail <strong>matsuotimizz@gmail.com</strong></span>
+        </div>
+        <div class="contact-detail">
+          <span class="contact-icon">⏱️</span>
+          <span>Resposta em <strong>até 24h úteis</strong></span>
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="form-title">Enviar mensagem</div>
+        <form id="contactForm" action="https://formspree.io/f/mbdeolap" method="POST">
+          <div class="form-group">
+            <label class="form-label" for="nome">Nome *</label>
+            <input class="form-input" type="text" id="nome" name="nome" placeholder="Seu nome completo" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="email">E-mail *</label>
+            <input class="form-input" type="email" id="email" name="email" placeholder="seu@email.com" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="assunto">Assunto</label>
+            <select class="form-select" id="assunto" name="assunto">
+              <option value="">Selecione...</option>
+              <option value="demo">Solicitar demonstração</option>
+              <option value="plano_mensal">Contratar plano mensal</option>
+              <option value="plano_anual">Contratar plano anual</option>
+              <option value="implantacao">Dúvida sobre implantação</option>
+              <option value="outro">Outro assunto</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="mensagem">Mensagem *</label>
+            <textarea class="form-textarea" id="mensagem" name="mensagem" placeholder="Conte um pouco sobre o seu condomínio..." required></textarea>
+          </div>
+          <button type="submit" class="form-submit" id="submitBtn">Enviar mensagem</button>
+          <div class="form-error-msg" id="formError">Erro ao enviar. Tente novamente ou nos contate pelo WhatsApp.</div>
+        </form>
+        <div class="form-success" id="formSuccess">
+          <div class="form-success-icon">✅</div>
+          <div class="form-success-title">Mensagem enviada!</div>
+          <div class="form-success-text">Recebemos seu contato e retornaremos em até 24 horas úteis.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Condo<span>Fácil</span></div>
+  <div class="footer-tagline">Sistema de Gestão Condominial</div>
+  <ul class="footer-links">
+    <li><a href="#modulos">Módulos</a></li>
+    <li><a href="#planos">Planos</a></li>
+    <li><a href="#seguranca">Segurança</a></li>
+    <li><a href="#demo">Demo</a></li>
+    <li><a href="#contato">Contato</a></li>
+    <li><a href="https://condofacil-lemon.vercel.app" target="_blank">Acessar sistema →</a></li>
+  </ul>
+  <div class="footer-copy">© 2025 CondoFácil. Todos os direitos reservados.</div>
+</footer>
+
+<script>
+  // Mobile menu
+  document.getElementById('menuBtn').onclick = () => document.getElementById('mobileMenu').classList.add('open');
+  document.getElementById('menuClose').onclick = () => document.getElementById('mobileMenu').classList.remove('open');
+  function closeMobile() { document.getElementById('mobileMenu').classList.remove('open'); }
+
+  // Scroll animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // Formspree AJAX submit
+  const form = document.getElementById('contactForm');
+  const btn = document.getElementById('submitBtn');
+  const successDiv = document.getElementById('formSuccess');
+  const errorMsg = document.getElementById('formError');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    errorMsg.style.display = 'none';
+
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        form.style.display = 'none';
+        successDiv.style.display = 'block';
+      } else {
+        throw new Error('Erro');
+      }
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'Enviar mensagem';
+      errorMsg.style.display = 'block';
+    }
+  });
+</script>
+</body>
 </html>
