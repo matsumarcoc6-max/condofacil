@@ -5,7 +5,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import * as XLSX from "xlsx";
 
-export default function Moradores() {
+export default function Moradores({ perfil: perfilLogado }) {
   const [moradores, setMoradores] = useState([]);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
@@ -86,6 +86,10 @@ const [executando, setExecutando] = useState("");
   }
 
   async function cadastrarMorador() {
+    if (perfilLogado === "sindico" && (perfil === "sindico" || perfil === "admin_geral")) {
+      setErro("Síndico só pode cadastrar morador ou porteiro.");
+      return;
+    }
     if (!nome || !email || !senha) {
       setErro("Nome, e-mail e senha são obrigatorios.");
       return;
@@ -248,7 +252,8 @@ const [executando, setExecutando] = useState("");
        <select style={inp} value={perfil} onChange={(e) => setPerfil(e.target.value)}>
           <option value="morador">Morador</option>
           <option value="porteiro">Porteiro</option>
-          <option value="sindico">Sindico</option>
+          {perfilLogado === "admin_geral" && <option value="sindico">Síndico</option>}
+          {perfilLogado === "admin_geral" && <option value="admin_geral">Admin Geral</option>}
         </select>
 
         <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "12px", padding: "12px", background: "#0f172a", borderRadius: "8px", border: "1px solid #334155" }}>
