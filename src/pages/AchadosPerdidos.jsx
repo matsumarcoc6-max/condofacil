@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { collection, addDoc, getDocs, orderBy, query, serverTimestamp, doc, updateDoc, deleteDoc } from "firebase/firestore";
 
-export default function AchadosPerdidos() {
+export default function AchadosPerdidos({ perfil }) {
+  const podeGerenciar = perfil === "sindico" || perfil === "admin_geral";
   const [itens, setItens] = useState([]);
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -107,9 +108,11 @@ export default function AchadosPerdidos() {
                 Marcar como resolvido
               </button>
             )}
-            <button onClick={() => excluirItem(item.id)} style={{ padding: "4px 12px", background: "transparent", color: "#475569", border: "1px solid #475569", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
-              Excluir
-            </button>
+            {podeGerenciar && (
+              <button onClick={() => excluirItem(item.id)} style={{ padding: "4px 12px", background: "transparent", color: "#475569", border: "1px solid #475569", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
+                Excluir
+              </button>
+            )}
           </div>
         </div>
       ))}

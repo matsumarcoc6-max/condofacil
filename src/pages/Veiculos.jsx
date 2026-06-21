@@ -11,7 +11,8 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 
-export default function Veiculos() {
+export default function Veiculos({ perfil }) {
+  const podeGerenciar = perfil === "sindico" || perfil === "admin_geral";
   const [veiculos, setVeiculos] = useState([]);
   const [proprietario, setProprietario] = useState("");
   const [apartamento, setApartamento] = useState("");
@@ -76,23 +77,25 @@ export default function Veiculos() {
     <div style={{ padding: "24px" }}>
       <h2 style={{ color: "#38bdf8", marginBottom: "20px" }}>Veiculos dos Moradores</h2>
 
-      <div style={{ background: "#1e293b", padding: "24px", borderRadius: "12px", marginBottom: "24px" }}>
-        <h3 style={{ color: "#f1f5f9", marginBottom: "12px" }}>Cadastrar veiculo</h3>
+      {podeGerenciar && (
+        <div style={{ background: "#1e293b", padding: "24px", borderRadius: "12px", marginBottom: "24px" }}>
+          <h3 style={{ color: "#f1f5f9", marginBottom: "12px" }}>Cadastrar veiculo</h3>
 
-        <input style={inp} placeholder="Nome do proprietario *" value={proprietario} onChange={(e) => setProprietario(e.target.value)} />
-        <input style={inp} placeholder="Apartamento *" value={apartamento} onChange={(e) => setApartamento(e.target.value)} />
-        <input style={inp} placeholder="Modelo (ex: Honda Civic)" value={modelo} onChange={(e) => setModelo(e.target.value)} />
-        <input style={inp} placeholder="Cor (ex: Prata)" value={cor} onChange={(e) => setCor(e.target.value)} />
-        <input style={inp} placeholder="Placa *" value={placa} onChange={(e) => setPlaca(e.target.value.toUpperCase())} />
-        <input style={inp} placeholder="Numero da vaga (ex: 12)" value={vaga} onChange={(e) => setVaga(e.target.value)} />
+          <input style={inp} placeholder="Nome do proprietario *" value={proprietario} onChange={(e) => setProprietario(e.target.value)} />
+          <input style={inp} placeholder="Apartamento *" value={apartamento} onChange={(e) => setApartamento(e.target.value)} />
+          <input style={inp} placeholder="Modelo (ex: Honda Civic)" value={modelo} onChange={(e) => setModelo(e.target.value)} />
+          <input style={inp} placeholder="Cor (ex: Prata)" value={cor} onChange={(e) => setCor(e.target.value)} />
+          <input style={inp} placeholder="Placa *" value={placa} onChange={(e) => setPlaca(e.target.value.toUpperCase())} />
+          <input style={inp} placeholder="Numero da vaga (ex: 12)" value={vaga} onChange={(e) => setVaga(e.target.value)} />
 
-        {erro && <p style={{ color: "#ef4444", fontSize: "0.9rem", marginBottom: "8px" }}>{erro}</p>}
-        {sucesso && <p style={{ color: "#22c55e", fontSize: "0.9rem", marginBottom: "8px" }}>{sucesso}</p>}
+          {erro && <p style={{ color: "#ef4444", fontSize: "0.9rem", marginBottom: "8px" }}>{erro}</p>}
+          {sucesso && <p style={{ color: "#22c55e", fontSize: "0.9rem", marginBottom: "8px" }}>{sucesso}</p>}
 
-        <button style={btn} onClick={cadastrarVeiculo} disabled={salvando}>
-          {salvando ? "Cadastrando..." : "Cadastrar veiculo"}
-        </button>
-      </div>
+          <button style={btn} onClick={cadastrarVeiculo} disabled={salvando}>
+            {salvando ? "Cadastrando..." : "Cadastrar veiculo"}
+          </button>
+        </div>
+      )}
 
       {/* Busca */}
       <input
@@ -129,12 +132,14 @@ export default function Veiculos() {
                 </p>
               )}
             </div>
-            <button
-              onClick={() => excluirVeiculo(v.id)}
-              style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}
-            >
-              Excluir
-            </button>
+            {podeGerenciar && (
+              <button
+                onClick={() => excluirVeiculo(v.id)}
+                style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}
+              >
+                Excluir
+              </button>
+            )}
           </div>
         </div>
       ))}

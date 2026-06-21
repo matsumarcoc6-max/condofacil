@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { collection, addDoc, getDocs, orderBy, query, serverTimestamp, doc, deleteDoc } from "firebase/firestore";
 
-export default function Avisos() {
+export default function Avisos({ perfil }) {
+  const podeGerenciar = perfil === "sindico" || perfil === "admin_geral";
   const [avisos, setAvisos] = useState([]);
   const [titulo, setTitulo] = useState("");
   const [mensagem, setMensagem] = useState("");
@@ -41,25 +42,27 @@ export default function Avisos() {
     <div style={styles.container}>
       <h2 style={styles.titulo}>Avisos</h2>
 
-      <div style={styles.card}>
-        <h3 style={styles.subtitulo}>Novo aviso</h3>
-        <input
-          style={styles.input}
-          placeholder="Titulo"
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
-        />
-        <textarea
-          style={styles.textarea}
-          placeholder="Mensagem"
-          value={mensagem}
-          onChange={(e) => setMensagem(e.target.value)}
-          rows={4}
-        />
-        <button style={styles.botao} onClick={publicarAviso} disabled={salvando}>
-          {salvando ? "Publicando..." : "Publicar aviso"}
-        </button>
-      </div>
+      {podeGerenciar && (
+        <div style={styles.card}>
+          <h3 style={styles.subtitulo}>Novo aviso</h3>
+          <input
+            style={styles.input}
+            placeholder="Titulo"
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+          />
+          <textarea
+            style={styles.textarea}
+            placeholder="Mensagem"
+            value={mensagem}
+            onChange={(e) => setMensagem(e.target.value)}
+            rows={4}
+          />
+          <button style={styles.botao} onClick={publicarAviso} disabled={salvando}>
+            {salvando ? "Publicando..." : "Publicar aviso"}
+          </button>
+        </div>
+      )}
 
       <div style={{ marginTop: "24px" }}>
         {avisos.length === 0 && (
@@ -77,12 +80,14 @@ export default function Avisos() {
                   year: "numeric",
                 })}
               </p>
-              <button
-                onClick={() => excluirAviso(aviso.id)}
-                style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}
-              >
-                Excluir
-              </button>
+              {podeGerenciar && (
+                <button
+                  onClick={() => excluirAviso(aviso.id)}
+                  style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}
+                >
+                  Excluir
+                </button>
+              )}
             </div>
           </div>
         ))}

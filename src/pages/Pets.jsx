@@ -11,7 +11,8 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 
-export default function Pets() {
+export default function Pets({ perfil }) {
+  const podeGerenciar = perfil === "sindico" || perfil === "admin_geral";
   const [pets, setPets] = useState([]);
   const [nome, setNome] = useState("");
   const [especie, setEspecie] = useState("Cachorro");
@@ -165,12 +166,14 @@ export default function Pets() {
                 </p>
               )}
             </div>
-            <button
-              onClick={() => excluirPet(p.id)}
-              style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}
-            >
-              Excluir
-            </button>
+            {podeGerenciar && (
+              <button
+                onClick={() => excluirPet(p.id)}
+                style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}
+              >
+                Excluir
+              </button>
+            )}
           </div>
         </div>
       ))}

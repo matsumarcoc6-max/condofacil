@@ -24,7 +24,8 @@ const corCategoria = {
   Outros: "#94a3b8",
 };
 
-export default function TelefonesUteis() {
+export default function TelefonesUteis({ perfil }) {
+  const podeGerenciar = perfil === "sindico" || perfil === "admin_geral";
   const [contatos, setContatos] = useState([]);
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
@@ -70,36 +71,38 @@ const filtrados =
     <div style={{ padding: "24px" }}>
       <h2 style={{ color: "#38bdf8", marginBottom: "20px" }}>📞 Telefones Úteis</h2>
 
-      {/* Formulário */}
-      <div style={{ background: "#1e293b", padding: "24px", borderRadius: "12px", marginBottom: "24px" }}>
-        <h3 style={{ color: "#f1f5f9", marginBottom: "12px" }}>Adicionar contato</h3>
+      {/* Formulário — só para síndico e admin */}
+      {podeGerenciar && (
+        <div style={{ background: "#1e293b", padding: "24px", borderRadius: "12px", marginBottom: "24px" }}>
+          <h3 style={{ color: "#f1f5f9", marginBottom: "12px" }}>Adicionar contato</h3>
 
-        <input
-          style={inp}
-          placeholder="Nome do contato (ex: Portaria, Bombeiros...)"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-        />
-        <input
-          style={inp}
-          placeholder="Telefone (ex: (11) 99999-9999)"
-          value={telefone}
-          onChange={(e) => setTelefone(e.target.value)}
-        />
-        <select
-          style={inp}
-          value={categoria}
-          onChange={(e) => setCategoria(e.target.value)}
-        >
-          {categorias.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
+          <input
+            style={inp}
+            placeholder="Nome do contato (ex: Portaria, Bombeiros...)"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+          />
+          <input
+            style={inp}
+            placeholder="Telefone (ex: (11) 99999-9999)"
+            value={telefone}
+            onChange={(e) => setTelefone(e.target.value)}
+          />
+          <select
+            style={inp}
+            value={categoria}
+            onChange={(e) => setCategoria(e.target.value)}
+          >
+            {categorias.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
 
-        <button style={btn} onClick={publicar} disabled={loading}>
-          {loading ? "Salvando..." : "Adicionar contato"}
-        </button>
-      </div>
+          <button style={btn} onClick={publicar} disabled={loading}>
+            {loading ? "Salvando..." : "Adicionar contato"}
+          </button>
+        </div>
+      )}
 
       {/* Filtros */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "16px" }}>
@@ -165,20 +168,20 @@ const filtrados =
               {c.categoria}
             </span>
           </div>
-          {!c.id.startsWith("fixo-") && (
-     <button
-  onClick={() => excluir(c.id)}
-  style={{
-    background: "transparent",
-    border: "none",
-    color: "#ef4444",
-    cursor: "pointer",
-    fontSize: "0.85rem",
-    fontWeight: "600",
-  }}
->
-  Excluir
-</button>
+          {podeGerenciar && !c.id.startsWith("fixo-") && (
+            <button
+              onClick={() => excluir(c.id)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#ef4444",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+                fontWeight: "600",
+              }}
+            >
+              Excluir
+            </button>
           )}
         </div>
       ))}
