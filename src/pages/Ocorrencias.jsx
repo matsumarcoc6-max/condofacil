@@ -9,10 +9,12 @@ import {
   serverTimestamp,
   doc,
   updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
-export default function Ocorrencias() {
+export default function Ocorrencias({ perfil }) {
+  const podeGerenciar = perfil === "sindico" || perfil === "admin_geral";
   const [ocorrencias, setOcorrencias] = useState([]);
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -71,6 +73,11 @@ export default function Ocorrencias() {
 
   async function resolverOcorrencia(id) {
     await updateDoc(doc(db, "ocorrencias", id), { status: "resolvida" });
+    carregarOcorrencias();
+  }
+
+  async function excluirOcorrencia(id) {
+    await deleteDoc(doc(db, "ocorrencias", id));
     carregarOcorrencias();
   }
 
@@ -154,9 +161,14 @@ export default function Ocorrencias() {
                 <span style={{ color: "#475569", fontSize: "0.85rem" }}>
                   {oc.criado_em?.toDate().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
                 </span>
-                {oc.status === "aberta" && (
+                {oc.status === "aberta" && podeGerenciar && (
                   <button onClick={() => resolverOcorrencia(oc.id)} style={{ padding: "4px 12px", background: "#22c55e", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem", fontWeight: "bold" }}>
                     Resolver
+                  </button>
+                )}
+                {podeGerenciar && (
+                  <button onClick={() => excluirOcorrencia(oc.id)} style={{ padding: "4px 12px", background: "transparent", color: "#ef4444", border: "1px solid #ef4444", borderRadius: "6px", cursor: "pointer", fontSize: "0.8rem" }}>
+                    Excluir
                   </button>
                 )}
               </div>
